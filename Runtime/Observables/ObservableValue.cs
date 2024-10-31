@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ObservableGadgets
+namespace ObservableGadgets.Observables
 {
     public abstract class ObservableValue<TValueType> : IReceiveValues<TValueType>, IEmitValues<TValueType> where TValueType : IEquatable<TValueType>
     {
@@ -16,21 +16,18 @@ namespace ObservableGadgets
         }
 
         // IEmitValues
+        public TValueType GetValue() => _value;
         public event IEmitValues<TValueType>.ValueChangeHandler OnValueChange;
         
+        #region Observer Management
         public void AddObserver(IObserve<TValueType> observer) => _interfaceObservers.Add(observer);
-        public void RemoveObserver(IObserve<TValueType> observer) => _interfaceObservers.Remove(observer);
-
         public void AddObserver(Action<TValueType> observer) => _actionObservers.Add(observer);
+        public void RemoveObserver(IObserve<TValueType> observer) => _interfaceObservers.Remove(observer);
         public void RemoveObserver(Action<TValueType> observer) => _actionObservers.Remove(observer);
-
-        public TValueType GetValue() => _value;
-
+        #endregion
+        
         // IReceiveValues
-        public void SetValue(TValueType newValue)
-        {
-            SetValueInternal(newValue);
-        }
+        public void SetValue(TValueType newValue) => SetValueInternal(newValue);
 
         /// <summary>
         /// Changes the value of the observable and invokes the state change handlers.
