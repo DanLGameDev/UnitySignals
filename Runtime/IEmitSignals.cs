@@ -1,11 +1,11 @@
 using System;
 
-namespace ObservableGadgets
+namespace UnitySignals
 {
-    public interface IEmitValues<TValueType>
+    public interface IEmitSignals<TValueType> where TValueType : IComparable<TValueType>
     { 
-        public delegate void ValueChangeHandler(IEmitValues<TValueType> sender, TValueType oldValue, TValueType newValue);
-        public event ValueChangeHandler OnValueChange;
+        public delegate void SignalChangedHandler(IEmitSignals<TValueType> sender, TValueType oldValue, TValueType newValue);
+        public event SignalChangedHandler OnValueChange;
 
         public void AddObserver(IObserve<TValueType> observer);
         public void RemoveObserver(IObserve<TValueType> observer);

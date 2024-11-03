@@ -1,23 +1,23 @@
 using System;
 using System.Collections.Generic;
 
-namespace ObservableGadgets.Observables
+namespace UnitySignals.Signals
 {
-    public abstract class ObservableValue<TValueType> : IReceiveValues<TValueType>, IEmitValues<TValueType> where TValueType : IEquatable<TValueType>
+    public abstract class Signal<TValueType> : IReceiveSignals<TValueType>, IEmitSignals<TValueType> where TValueType : IComparable<TValueType>
     {
         private TValueType _value;
         
-        private List<IObserve<TValueType>> _interfaceObservers = new List<IObserve<TValueType>>();
-        private List<Action<TValueType>> _actionObservers = new List<Action<TValueType>>();
+        private readonly HashSet<IObserve<TValueType>> _interfaceObservers = new();
+        private readonly HashSet<Action<TValueType>> _actionObservers = new();
         
-        protected ObservableValue(TValueType initialValue)
+        protected Signal(TValueType initialValue)
         {
             _value = initialValue;
         }
 
         // IEmitValues
         public TValueType GetValue() => _value;
-        public event IEmitValues<TValueType>.ValueChangeHandler OnValueChange;
+        public event IEmitSignals<TValueType>.SignalChangedHandler OnValueChange;
         
         #region Observer Management
         public void AddObserver(IObserve<TValueType> observer) => _interfaceObservers.Add(observer);

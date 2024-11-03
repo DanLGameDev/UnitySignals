@@ -1,14 +1,14 @@
 using System;
 
-namespace ObservableGadgets.Observables
+namespace UnitySignals.Signals
 {
-    public abstract class ObservableClampedNumeric<TValueType> : ObservableValue<TValueType> where TValueType : IComparable<TValueType>, IEquatable<TValueType>
+    public abstract class ClampedNumericSignal<TValueType> : Signal<TValueType> where TValueType : IComparable<TValueType>
     {
         public ClampMode ClampMode { get; }
         public TValueType MinValue { get; }
         public TValueType MaxValue { get; }
 
-        protected ObservableClampedNumeric(TValueType initialState, ClampMode clampMode, TValueType minValue, TValueType maxValue) : base(initialState)
+        protected ClampedNumericSignal(TValueType initialState, ClampMode clampMode, TValueType minValue, TValueType maxValue) : base(initialState)
         {
             ClampMode = clampMode;
             MinValue = minValue;

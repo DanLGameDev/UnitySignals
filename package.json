@@ -1,7 +1,7 @@
 {
-  "name": "observable-gadgets",
+  "name": "unity-signals",
   "version": "1.0.0",
-  "displayName": "Observable Gadgets",
+  "displayName": "Unity Signals",
   "author": {
     "name": "Daniel Loughmiller",
     "url": "https://github.com/DanLGameDev/"

@@ -1,6 +1,6 @@
 using System;
 
-namespace ObservableGadgets
+namespace UnitySignals
 {
     public static class Clamper
     {

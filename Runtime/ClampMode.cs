@@ -1,4 +1,4 @@
-namespace ObservableGadgets
+namespace UnitySignals
 {
     public enum ClampMode
     {
