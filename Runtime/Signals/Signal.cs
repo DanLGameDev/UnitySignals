@@ -15,7 +15,7 @@ namespace UnitySignals.Signals
             _value = initialValue;
         }
 
-        // IEmitValues
+        // IEmitSignals
         public TValueType GetValue() => _value;
         public event IEmitSignals<TValueType>.SignalChangedHandler OnValueChange;
         
@@ -26,11 +26,11 @@ namespace UnitySignals.Signals
         public void RemoveObserver(Action<TValueType> observer) => _actionObservers.Remove(observer);
         #endregion
         
-        // IReceiveValues
+        // IReceiveSignals
         public void SetValue(TValueType newValue) => SetValueInternal(newValue);
 
         /// <summary>
-        /// Changes the value of the observable and invokes the state change handlers.
+        /// Changes the value of the signal and invokes the state change handlers.
         /// </summary>
         /// <param name="newValue">The desired new state</param>
         /// <returns>False if the state did not change or true if it did. Expected to be used to trigger additional handlers or similar in derived classes</returns>
