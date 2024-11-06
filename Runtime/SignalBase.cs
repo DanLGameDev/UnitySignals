@@ -3,21 +3,34 @@ using System.Collections.Generic;
 
 namespace DGP.UnitySignals
 {
-    public abstract class SignalBase<TSignalType> : IEmitSignals<TSignalType> where TSignalType : IComparable<TSignalType>
+    public abstract class SignalBase<TValueType> : IEmitSignals<TValueType> where TValueType : IComparable<TValueType>
     {
-        public event IEmitSignals<TSignalType>.SignalChangedHandler OnSignalChanged;
+        public event IEmitSignals<TValueType>.SignalChangedHandler OnSignalChanged;
         
-        private readonly HashSet<ISignalObserver<TSignalType>> _objectObservers = new();
-        private readonly HashSet<Action<TSignalType>> _delegateObservers = new();
+        private readonly HashSet<ISignalObserver<TValueType>> _objectObservers = new();
+        private readonly HashSet<IEmitSignals<TValueType>.SignalChangedHandler> _delegateObservers = new();
+        private readonly HashSet<Action<TValueType>> _actionObservers = new();
         
-        public void AddObserver(ISignalObserver<TSignalType> observer) => _objectObservers.Add(observer);
-        public void RemoveObserver(ISignalObserver<TSignalType> observer) => _objectObservers.Remove(observer);
+        public static implicit operator TValueType(SignalBase<TValueType> signal) => signal.GetValue();
+        
+        public void AddObserver(ISignalObserver<TValueType> observer) => _objectObservers.Add(observer);
+        public void RemoveObserver(ISignalObserver<TValueType> observer) => _objectObservers.Remove(observer);
 
-        public void AddObserver(Action<TSignalType> observer) => _delegateObservers.Add(observer);
-        public void RemoveObserver(Action<TSignalType> observer) => _delegateObservers.Remove(observer);
+        public void AddObserver(IEmitSignals<TValueType>.SignalChangedHandler observer) => _delegateObservers.Add(observer);
+        public void RemoveObserver(IEmitSignals<TValueType>.SignalChangedHandler observer) => _delegateObservers.Remove(observer);
+        
+        public void AddObserver(Action<TValueType> observer) => _actionObservers.Add(observer);
+        public void RemoveObserver(Action<TValueType> observer) => _actionObservers.Remove(observer);
 
-        public abstract TSignalType GetValue();
-        protected void NotifyObservers(TSignalType oldValue, TSignalType newValue)
+        public void ClearObservers()
+        {
+            _objectObservers.Clear();
+            _delegateObservers.Clear();
+            _actionObservers.Clear();
+        }
+
+        public abstract TValueType GetValue();
+        protected void NotifyObservers(TValueType oldValue, TValueType newValue)
         {
             OnSignalChanged?.Invoke(this, oldValue, newValue);
             
@@ -25,6 +38,9 @@ namespace DGP.UnitySignals
                 observer.SignalValueChanged(this, newValue, oldValue);
             
             foreach (var observer in _delegateObservers)
+                observer(this, oldValue, newValue);
+            
+            foreach (var observer in _actionObservers)
                 observer(newValue);
         }
     }
