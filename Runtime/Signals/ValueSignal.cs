@@ -3,14 +3,13 @@ using Codice.Utils;
 
 namespace DGP.UnitySignals.Signals
 {
-    public abstract class ValueSignal<TValueType> : SignalBase<TValueType> where TValueType : IComparable<TValueType>
+    public abstract class ValueSignal<TValueType> : SignalBase<TValueType> where TValueType : IEquatable<TValueType>
     {
         private TValueType _value;
         
         public override TValueType GetValue() => _value;
 
-        protected ValueSignal(TValueType value) => _value = value;
-        protected ValueSignal() : this(default(TValueType)) { }
+        protected ValueSignal(TValueType value = default(TValueType)) => _value = value;
 
         public virtual void SetValue(TValueType value)
         {

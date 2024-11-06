@@ -2,7 +2,6 @@ namespace DGP.UnitySignals.Signals
 {
     public class IntegerValueSignal : ValueSignal<int>
     {
-        public IntegerValueSignal(int value) : base(value) { }
-        public IntegerValueSignal() : base() { }
+        public IntegerValueSignal(int value=default(int)) : base(value) { }
     }
 }
