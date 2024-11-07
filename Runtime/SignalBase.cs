@@ -5,7 +5,7 @@ namespace DGP.UnitySignals
 {
     public abstract class SignalBase<TValueType> : IEmitSignals<TValueType> where TValueType : IEquatable<TValueType>
     {
-        public event IEmitSignals<TValueType>.SignalChangedHandler OnSignalChanged;
+        public event IEmitSignals<TValueType>.SignalChangedHandler SignalChanged;
         
         private readonly HashSet<ISignalObserver<TValueType>> _objectObservers = new();
         private readonly HashSet<IEmitSignals<TValueType>.SignalChangedHandler> _delegateObservers = new();
@@ -32,7 +32,7 @@ namespace DGP.UnitySignals
         public abstract TValueType GetValue();
         protected void NotifyObservers(TValueType oldValue, TValueType newValue)
         {
-            OnSignalChanged?.Invoke(this, oldValue, newValue);
+            SignalChanged?.Invoke(this, oldValue, newValue);
             
             foreach (var observer in _objectObservers)
                 observer.SignalValueChanged(this, newValue, oldValue);

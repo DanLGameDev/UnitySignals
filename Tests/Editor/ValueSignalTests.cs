@@ -23,7 +23,7 @@ namespace DGP.UnitySignals.Editor.Tests
             int invoked = 0;
             var signal = new IntegerValueSignal();
             
-            signal.OnSignalChanged += (sender, oldValue, newValue) => invoked++;
+            signal.SignalChanged += (sender, oldValue, newValue) => invoked++;
             signal.SetValue(42);
             
             Assert.AreEqual(1, invoked);

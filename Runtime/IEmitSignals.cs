@@ -5,7 +5,7 @@ namespace DGP.UnitySignals
     public interface IEmitSignals<TValueType> where TValueType : IEquatable<TValueType>
     { 
         public delegate void SignalChangedHandler(IEmitSignals<TValueType> sender, TValueType oldValue, TValueType newValue);
-        public event SignalChangedHandler OnSignalChanged;
+        public event SignalChangedHandler SignalChanged;
 
         public void AddObserver(ISignalObserver<TValueType> observer);
         public void RemoveObserver(ISignalObserver<TValueType> observer);
