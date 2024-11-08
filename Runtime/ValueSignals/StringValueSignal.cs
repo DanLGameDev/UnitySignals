@@ -1,6 +1,4 @@
-using System;
-
-namespace DGP.UnitySignals.Signals
+namespace DGP.UnitySignals.ValueSignals
 {
     public class StringValueSignal : ValueSignal<string>
     {

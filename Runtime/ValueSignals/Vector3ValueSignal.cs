@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace DGP.UnitySignals.Signals
+namespace DGP.UnitySignals.ValueSignals
 {
     public class Vector3ValueSignal : ValueSignal<Vector3>
     {

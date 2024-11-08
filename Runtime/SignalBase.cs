@@ -5,14 +5,21 @@ namespace DGP.UnitySignals
 {
     public abstract class SignalBase<TValueType> : IEmitSignals<TValueType> where TValueType : IEquatable<TValueType>
     {
-        public event IEmitSignals<TValueType>.SignalChangedHandler SignalChanged;
+        public event IEmitSignals.SignalChangedDelegate SignalChanged;
+        public event IEmitSignals<TValueType>.SignalChangedHandler SignalValueChanged;
         
+        private readonly HashSet<IEmitSignals.SignalChangedDelegate> _untypedObservers = new();
         private readonly HashSet<ISignalObserver<TValueType>> _objectObservers = new();
         private readonly HashSet<IEmitSignals<TValueType>.SignalChangedHandler> _delegateObservers = new();
         private readonly HashSet<Action<TValueType>> _actionObservers = new();
         
         public static implicit operator TValueType(SignalBase<TValueType> signal) => signal.GetValue();
         
+        // IEmitSignals
+        public void AddObserver(IEmitSignals.SignalChangedDelegate observer) => _untypedObservers.Add(observer);
+        public void RemoveObserver(IEmitSignals.SignalChangedDelegate observer) => _untypedObservers.Remove(observer);
+
+        // IEmitSignals<TValueType>
         public void AddObserver(ISignalObserver<TValueType> observer) => _objectObservers.Add(observer);
         public void RemoveObserver(ISignalObserver<TValueType> observer) => _objectObservers.Remove(observer);
 
@@ -24,6 +31,7 @@ namespace DGP.UnitySignals
 
         public void ClearObservers()
         {
+            _untypedObservers.Clear();
             _objectObservers.Clear();
             _delegateObservers.Clear();
             _actionObservers.Clear();
@@ -32,7 +40,11 @@ namespace DGP.UnitySignals
         public abstract TValueType GetValue();
         protected void NotifyObservers(TValueType oldValue, TValueType newValue)
         {
-            SignalChanged?.Invoke(this, oldValue, newValue);
+            SignalChanged?.Invoke(this);
+            SignalValueChanged?.Invoke(this, oldValue, newValue);
+            
+            foreach (var observer in _untypedObservers)
+                observer(this);
             
             foreach (var observer in _objectObservers)
                 observer.SignalValueChanged(this, newValue, oldValue);

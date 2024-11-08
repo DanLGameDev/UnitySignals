@@ -1,4 +1,4 @@
-namespace DGP.UnitySignals.Signals
+namespace DGP.UnitySignals.ValueSignals
 {
     public class DecimalValueSignal : ValueSignal<decimal>
     {

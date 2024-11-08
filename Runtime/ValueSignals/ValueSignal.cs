@@ -1,7 +1,6 @@
 using System;
-using Codice.Utils;
 
-namespace DGP.UnitySignals.Signals
+namespace DGP.UnitySignals.ValueSignals
 {
     public abstract class ValueSignal<TValueType> : SignalBase<TValueType> where TValueType : IEquatable<TValueType>
     {

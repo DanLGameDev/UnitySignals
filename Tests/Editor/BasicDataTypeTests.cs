@@ -1,4 +1,5 @@
 using DGP.UnitySignals.Signals;
+using DGP.UnitySignals.ValueSignals;
 using NUnit.Framework;
 using UnityEngine;
 
