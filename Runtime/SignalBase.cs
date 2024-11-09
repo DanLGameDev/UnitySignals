@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DGP.UnitySignals
 {
-    public abstract class SignalBase<TValueType> : IEmitSignals<TValueType> where TValueType : IEquatable<TValueType>
+    public abstract class SignalBase<TValueType> : IEmitSignals<TValueType>, IDisposable where TValueType : IEquatable<TValueType>
     {
         public event IEmitSignals.SignalChangedDelegate SignalChanged;
         public event IEmitSignals<TValueType>.SignalChangedHandler SignalValueChanged;
@@ -55,6 +55,18 @@ namespace DGP.UnitySignals
             _objectObservers.Clear();
             _delegateObservers.Clear();
             _actionObservers.Clear();
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+                ClearObservers();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

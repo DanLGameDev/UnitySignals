@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace DGP.UnitySignals.Signals
 {
-    public class DelegateSignal<TSignalType> : SignalBase<TSignalType>, IDisposable where TSignalType : IEquatable<TSignalType>
+    public class DelegateSignal<TSignalType> : SignalBase<TSignalType> where TSignalType : IEquatable<TSignalType>
     {
         private readonly Expression<Func<TSignalType>> _signalExpression;
         private readonly Func<TSignalType> _signalDelegate;
@@ -22,13 +22,14 @@ namespace DGP.UnitySignals.Signals
             FindDependentSignals(signalExpression.Body);
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+            
             foreach (var signal in _sourceSignals)
                 signal.SignalChanged -= OnSourceSignalChanged;
             
             _sourceSignals.Clear();
-            ClearObservers();
         }
         
         private void FindDependentSignals(Expression expression)
@@ -77,5 +78,7 @@ namespace DGP.UnitySignals.Signals
                 NotifyObservers(oldValue, newValue);
             }
         }
+        
+        
     }
 }
