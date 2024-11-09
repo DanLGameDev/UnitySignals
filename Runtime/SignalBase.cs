@@ -29,15 +29,8 @@ namespace DGP.UnitySignals
         public void AddObserver(Action<TValueType> observer) => _actionObservers.Add(observer);
         public void RemoveObserver(Action<TValueType> observer) => _actionObservers.Remove(observer);
 
-        public void ClearObservers()
-        {
-            _untypedObservers.Clear();
-            _objectObservers.Clear();
-            _delegateObservers.Clear();
-            _actionObservers.Clear();
-        }
-
         public abstract TValueType GetValue();
+        
         protected void NotifyObservers(TValueType oldValue, TValueType newValue)
         {
             SignalChanged?.Invoke(this);
@@ -54,6 +47,14 @@ namespace DGP.UnitySignals
             
             foreach (var observer in _actionObservers)
                 observer(newValue);
+        }
+        
+        public void ClearObservers()
+        {
+            _untypedObservers.Clear();
+            _objectObservers.Clear();
+            _delegateObservers.Clear();
+            _actionObservers.Clear();
         }
     }
 }

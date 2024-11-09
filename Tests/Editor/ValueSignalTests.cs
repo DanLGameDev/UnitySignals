@@ -33,7 +33,7 @@ namespace DGP.UnitySignals.Editor.Tests
         private class TestIntObserver : ISignalObserver<int>
         {
             public int invoked = 0;
-            public void SignalValueChanged(IEmitSignals<int> emitter, int newValue, int oldValue) => invoked++;
+            public void SignalValueChanged(IEmitSignals<int> emitter, int oldValue, int newValue) => invoked++;
         }
         
         [Test]
