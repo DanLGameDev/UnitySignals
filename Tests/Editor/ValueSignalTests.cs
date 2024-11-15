@@ -1,5 +1,4 @@
 using DGP.UnitySignals.Signals;
-using DGP.UnitySignals.ValueSignals;
 using NUnit.Framework;
 
 namespace DGP.UnitySignals.Editor.Tests
@@ -32,21 +31,20 @@ namespace DGP.UnitySignals.Editor.Tests
         
         private class TestIntObserver : ISignalObserver<int>
         {
-            public int invoked = 0;
-            public void SignalValueChanged(IEmitSignals<int> emitter, int oldValue, int newValue) => invoked++;
+            public int Invoked = 0;
+            public void SignalValueChanged(IEmitSignals<int> emitter, int oldValue, int newValue) => Invoked++;
         }
         
         [Test]
         public void TestObserverHandling()
         {
-            int invoked = 0;
             var signal = new IntegerValueSignal();
             var observer = new TestIntObserver();
             
             signal.AddObserver(observer);
             signal.SetValue(42);
             
-            Assert.AreEqual(1, observer.invoked);
+            Assert.AreEqual(1, observer.Invoked);
         }
         
         [Test]

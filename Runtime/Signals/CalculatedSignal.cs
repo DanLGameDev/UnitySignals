@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace DGP.UnitySignals.Signals
 {
-    public class DelegateSignal<TSignalType> : SignalBase<TSignalType> where TSignalType : IEquatable<TSignalType>
+    public class CalculatedSignal<TSignalType> : SignalBase<TSignalType> where TSignalType : IEquatable<TSignalType>
     {
         private readonly Expression<Func<TSignalType>> _signalExpression;
         private readonly Func<TSignalType> _signalDelegate;
@@ -13,7 +13,7 @@ namespace DGP.UnitySignals.Signals
         
         public override TSignalType GetValue() => _currentValue;
         
-        public DelegateSignal(Expression<Func<TSignalType>> signalExpression)
+        public CalculatedSignal(Expression<Func<TSignalType>> signalExpression)
         {
             _signalExpression = signalExpression;
             _signalDelegate = signalExpression.Compile();
@@ -44,6 +44,7 @@ namespace DGP.UnitySignals.Signals
                     
                     foreach (var argument in methodCallExpression.Arguments)
                         FindDependentSignals(argument);
+                    
                     break;
                 case BinaryExpression binaryExpression:
                     FindDependentSignals(binaryExpression.Left);

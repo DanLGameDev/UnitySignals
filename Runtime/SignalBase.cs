@@ -8,10 +8,10 @@ namespace DGP.UnitySignals
         public event IEmitSignals.SignalChangedDelegate SignalChanged;
         public event IEmitSignals<TValueType>.SignalChangedHandler SignalValueChanged;
         
-        private readonly HashSet<IEmitSignals.SignalChangedDelegate> _untypedObservers = new();
-        private readonly HashSet<ISignalObserver<TValueType>> _objectObservers = new();
-        private readonly HashSet<IEmitSignals<TValueType>.SignalChangedHandler> _delegateObservers = new();
-        private readonly HashSet<Action<TValueType>> _actionObservers = new();
+        private readonly List<IEmitSignals.SignalChangedDelegate> _untypedObservers = new();
+        private readonly List<ISignalObserver<TValueType>> _objectObservers = new();
+        private readonly List<IEmitSignals<TValueType>.SignalChangedHandler> _delegateObservers = new();
+        private readonly List<Action<TValueType>> _actionObservers = new();
         
         public static implicit operator TValueType(SignalBase<TValueType> signal) => signal.GetValue();
         
