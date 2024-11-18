@@ -11,7 +11,7 @@ namespace DGP.UnitySignals.Collections
         public event IObservableCollection<TValueType>.ListItemChangedHandler ItemChanged;
         public event EventHandler Cleared;
 
-        private List<TValueType> _list = new List<TValueType>();
+        private readonly List<TValueType> _list = new List<TValueType>();
 
         public IEnumerator<TValueType> GetEnumerator() => _list.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -21,6 +21,7 @@ namespace DGP.UnitySignals.Collections
             _list.Add(item);
             ItemAdded?.Invoke(this, new ListChangedEventArgs<TValueType> { Item = item, Index = _list.Count - 1 });
         }
+        
 
         public void Clear()
         {

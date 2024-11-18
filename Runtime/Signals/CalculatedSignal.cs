@@ -32,8 +32,11 @@ namespace DGP.UnitySignals.Signals
             _sourceSignals.Clear();
         }
         
-        private void FindDependentSignals(Expression expression)
+        private void FindDependentSignals(Expression expression, int depth = 0)
         {
+            if (depth > 32)
+                throw new Exception("Expression is too complex");
+            
             switch (expression) {
                 case MemberExpression memberExpression:
                     SubscribeToSignal(memberExpression);
@@ -43,15 +46,15 @@ namespace DGP.UnitySignals.Signals
                         SubscribeToSignal(objMember);
                     
                     foreach (var argument in methodCallExpression.Arguments)
-                        FindDependentSignals(argument);
+                        FindDependentSignals(argument, depth+1);
                     
                     break;
                 case BinaryExpression binaryExpression:
-                    FindDependentSignals(binaryExpression.Left);
-                    FindDependentSignals(binaryExpression.Right);
+                    FindDependentSignals(binaryExpression.Left, depth+1);
+                    FindDependentSignals(binaryExpression.Right, depth+1);
                     break;
                 case UnaryExpression unaryExpression:
-                    FindDependentSignals(unaryExpression.Operand);
+                    FindDependentSignals(unaryExpression.Operand, depth+1);
                     break;
             }
         }

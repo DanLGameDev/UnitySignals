@@ -16,18 +16,54 @@ namespace DGP.UnitySignals
         public static implicit operator TValueType(SignalBase<TValueType> signal) => signal.GetValue();
         
         // IEmitSignals
-        public void AddObserver(IEmitSignals.SignalChangedDelegate observer) => _untypedObservers.Add(observer);
-        public void RemoveObserver(IEmitSignals.SignalChangedDelegate observer) => _untypedObservers.Remove(observer);
+        public void AddObserver(IEmitSignals.SignalChangedDelegate observer)
+        {
+            if (observer == null) throw new ArgumentNullException("observer");
+            _untypedObservers.Add(observer);
+        }
+
+        public void RemoveObserver(IEmitSignals.SignalChangedDelegate observer)
+        {
+            if (observer == null) throw new ArgumentNullException("observer");
+            _untypedObservers.Remove(observer);
+        }
 
         // IEmitSignals<TValueType>
-        public void AddObserver(ISignalObserver<TValueType> observer) => _objectObservers.Add(observer);
-        public void RemoveObserver(ISignalObserver<TValueType> observer) => _objectObservers.Remove(observer);
+        public void AddObserver(ISignalObserver<TValueType> observer)
+        {
+            if (observer == null) throw new ArgumentNullException("observer");
+            _objectObservers.Add(observer);
+        }
 
-        public void AddObserver(IEmitSignals<TValueType>.SignalChangedHandler observer) => _delegateObservers.Add(observer);
-        public void RemoveObserver(IEmitSignals<TValueType>.SignalChangedHandler observer) => _delegateObservers.Remove(observer);
-        
-        public void AddObserver(Action<TValueType> observer) => _actionObservers.Add(observer);
-        public void RemoveObserver(Action<TValueType> observer) => _actionObservers.Remove(observer);
+        public void RemoveObserver(ISignalObserver<TValueType> observer)
+        {
+            if (observer == null) throw new ArgumentNullException("observer");
+            _objectObservers.Remove(observer);
+        }
+
+        public void AddObserver(IEmitSignals<TValueType>.SignalChangedHandler observer)
+        {
+            if (observer == null) throw new ArgumentNullException("observer");
+            _delegateObservers.Add(observer);
+        }
+
+        public void RemoveObserver(IEmitSignals<TValueType>.SignalChangedHandler observer)
+        {
+            if (observer == null) throw new ArgumentNullException("observer");
+            _delegateObservers.Remove(observer);
+        }
+
+        public void AddObserver(Action<TValueType> observer)
+        {
+            if (observer == null) throw new ArgumentNullException("observer");
+            _actionObservers.Add(observer);
+        }
+
+        public void RemoveObserver(Action<TValueType> observer)
+        {
+            if (observer == null) throw new ArgumentNullException("observer");
+            _actionObservers.Remove(observer);
+        }
 
         public abstract TValueType GetValue();
         
