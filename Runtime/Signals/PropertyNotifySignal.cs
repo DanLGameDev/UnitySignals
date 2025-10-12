@@ -1,12 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace DGP.UnitySignals.Signals
 {
-    public class PropertyNotifySignal<TValueType> : SignalBase<TValueType> 
-        where TValueType : INotifyPropertyChanged, IEquatable<TValueType>
+    public class PropertyNotifySignal<TValueType> : SignalBase<TValueType> where TValueType : INotifyPropertyChanged
     {
         private TValueType _value;
+        
+        public TValueType Value
+        {
+            get => _value;
+            set => SetValue(value);
+        }
         
         public override TValueType GetValue() => _value;
 
@@ -17,6 +23,9 @@ namespace DGP.UnitySignals.Signals
 
         public virtual void SetValue(TValueType value)
         {
+            if (ReferenceEquals(_value, value))
+                return;
+            
             // Unsubscribe from old value
             if (_value != null)
                 _value.PropertyChanged -= OnPropertyChanged;

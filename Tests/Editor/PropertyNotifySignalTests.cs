@@ -7,7 +7,7 @@ namespace DGP.UnitySignals.Editor.Tests
 {
     public class PropertyNotifySignalTests
     {
-        private class TestNotifyObject : INotifyPropertyChanged, IEquatable<TestNotifyObject>
+        private class TestNotifyObject : INotifyPropertyChanged
         {
             public event PropertyChangedEventHandler PropertyChanged;
 
@@ -227,5 +227,23 @@ namespace DGP.UnitySignals.Editor.Tests
             // Should not throw
             Assert.DoesNotThrow(() => obj.Value = 20);
         }
+        
+        [Test]
+        public void TestPropertyNotifySignalNoNotificationOnSameReference()
+        {
+            int invoked = 0;
+            var obj = new TestNotifyObject { Value = 10, Name = "Test" };
+            var signal = new PropertyNotifySignal<TestNotifyObject>(obj);
+    
+            signal.AddObserver((TestNotifyObject newValue) => invoked++);
+    
+            signal.SetValue(obj); // Same object reference
+            Assert.AreEqual(0, invoked); // Should NOT invoke
+    
+            var obj2 = new TestNotifyObject { Value = 10, Name = "Test" };
+            signal.SetValue(obj2); // Different reference
+            Assert.AreEqual(1, invoked); // Should invoke
+        }
+        
     }
 }

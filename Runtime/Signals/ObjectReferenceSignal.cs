@@ -20,7 +20,8 @@ namespace DGP.UnitySignals.Signals
         
         public virtual void SetValue(TObjectType value)
         {
-            if (_value == value) return; // Unity's == operator handles null checks
+            if (_value == value) 
+                return;
             
             TObjectType oldValue = _value;
             _value = value;
