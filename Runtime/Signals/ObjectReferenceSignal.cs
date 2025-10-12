@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace DGP.UnitySignals.Signals
 {
+    [Obsolete]
     public class ObjectReferenceSignal<TObjectType> : IEmitSignals, IDisposable 
         where TObjectType : UnityEngine.Object
     {
