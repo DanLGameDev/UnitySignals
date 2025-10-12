@@ -71,5 +71,34 @@ namespace DGP.UnitySignals.Editor.Tests
             Assert.AreEqual(1, invoked);
         }
         
+        [Test]
+        public void TestValueSignalNoNotificationOnSameValue()
+        {
+            int invoked = 0;
+            var signal = new IntegerValueSignal(42);
+    
+            signal.AddObserver((sender, oldValue, newValue) => invoked++);
+    
+            signal.SetValue(42); // Same value
+            Assert.AreEqual(0, invoked); // Should NOT invoke
+    
+            signal.SetValue(99); // Different value
+            Assert.AreEqual(1, invoked); // Should invoke
+        }
+        
+        [Test]
+        public void TestValueProperty()
+        {
+            var signal = new IntegerValueSignal(10);
+            Assert.AreEqual(10, signal.Value);
+    
+            int invoked = 0;
+            signal.AddObserver((sender, oldValue, newValue) => invoked++);
+    
+            signal.Value = 20; // Using property instead of SetValue
+            Assert.AreEqual(20, signal.Value);
+            Assert.AreEqual(1, invoked);
+        }
+        
     }
 }

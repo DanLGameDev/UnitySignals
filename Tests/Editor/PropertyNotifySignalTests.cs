@@ -245,5 +245,21 @@ namespace DGP.UnitySignals.Editor.Tests
             Assert.AreEqual(1, invoked); // Should invoke
         }
         
+        [Test]
+        public void TestValueProperty()
+        {
+            var obj = new TestNotifyObject { Value = 10, Name = "Test" };
+            var signal = new PropertyNotifySignal<TestNotifyObject>(obj);
+            Assert.AreEqual(obj, signal.Value);
+    
+            int invoked = 0;
+            signal.AddObserver((TestNotifyObject newValue) => invoked++);
+    
+            var obj2 = new TestNotifyObject { Value = 20, Name = "Test2" };
+            signal.Value = obj2; // Using property instead of SetValue
+            Assert.AreEqual(obj2, signal.Value);
+            Assert.AreEqual(1, invoked);
+        }
+        
     }
 }
