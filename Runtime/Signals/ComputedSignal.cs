@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace DGP.UnitySignals.Signals
 {
-    public class ComputedSignal<TSignalType> : SignalBase<TSignalType> where TSignalType : IEquatable<TSignalType>
+    public class ComputedSignal<TSignalType> : SignalBase<TSignalType>
     {
         private readonly Expression<Func<TSignalType>> _signalExpression;
         private readonly Func<TSignalType> _signalDelegate;
@@ -42,10 +42,16 @@ namespace DGP.UnitySignals.Signals
             switch (expression) {
                 case MemberExpression memberExpression:
                     SubscribeToSignal(memberExpression);
+                    // Recursively visit the object the member is accessed on
+                    if (memberExpression.Expression != null)
+                        FindDependentSignals(memberExpression.Expression, depth + 1);
                     break;
                 case MethodCallExpression methodCallExpression:
                     if (methodCallExpression.Object is MemberExpression objMember)
                         SubscribeToSignal(objMember);
+                    
+                    if (methodCallExpression.Object != null)
+                        FindDependentSignals(methodCallExpression.Object, depth + 1);
                     
                     foreach (var argument in methodCallExpression.Arguments)
                         FindDependentSignals(argument, depth+1);
@@ -57,6 +63,11 @@ namespace DGP.UnitySignals.Signals
                     break;
                 case UnaryExpression unaryExpression:
                     FindDependentSignals(unaryExpression.Operand, depth+1);
+                    break;
+                case ConditionalExpression conditionalExpression:
+                    FindDependentSignals(conditionalExpression.Test, depth+1);
+                    FindDependentSignals(conditionalExpression.IfTrue, depth+1);
+                    FindDependentSignals(conditionalExpression.IfFalse, depth+1);
                     break;
             }
         }
@@ -78,13 +89,11 @@ namespace DGP.UnitySignals.Signals
             var oldValue = _currentValue;
             var newValue = _signalDelegate();
     
-            if (!newValue.Equals(oldValue))
+            if (!EqualityComparer<TSignalType>.Default.Equals(newValue, oldValue))
             {
                 _currentValue = newValue;
                 NotifyObservers(oldValue, newValue);
             }
         }
-        
-        
     }
 }
