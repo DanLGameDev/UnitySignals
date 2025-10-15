@@ -3,31 +3,31 @@ using NUnit.Framework;
 
 namespace DGP.UnitySignals.Editor.Tests
 {
-    public class CalculatedSignalTest
+    public class ComputedSignalTest
     {
         [Test]
         public void TestCalculatedSignal()
         {
             IntegerValueSignal signal = new IntegerValueSignal(1);
-            CalculatedSignal<int> calculatedSignal = new CalculatedSignal<int>(() => signal.GetValue() * 2);
+            ComputedSignal<int> computedSignal = new ComputedSignal<int>(() => signal.GetValue() * 2);
             
-            Assert.AreEqual(2, calculatedSignal.GetValue());
+            Assert.AreEqual(2, computedSignal.GetValue());
             
             signal.SetValue(2);
-            Assert.AreEqual(4, calculatedSignal.GetValue());
+            Assert.AreEqual(4, computedSignal.GetValue());
         }
         
         [Test]
         public void TestNestedCalculatedSignals()
         {
             IntegerValueSignal signal = new IntegerValueSignal(1);
-            CalculatedSignal<int> calculatedSignal = new CalculatedSignal<int>(() => signal.GetValue() * 2);
-            CalculatedSignal<int> calculatedSignal2 = new CalculatedSignal<int>(() => calculatedSignal.GetValue() * 2);
+            ComputedSignal<int> computedSignal = new ComputedSignal<int>(() => signal.GetValue() * 2);
+            ComputedSignal<int> computedSignal2 = new ComputedSignal<int>(() => computedSignal.GetValue() * 2);
             
-            Assert.AreEqual(4, calculatedSignal2.GetValue());
+            Assert.AreEqual(4, computedSignal2.GetValue());
             
             signal.SetValue(2);
-            Assert.AreEqual(8, calculatedSignal2.GetValue());
+            Assert.AreEqual(8, computedSignal2.GetValue());
         }
 
         [Test]
@@ -35,7 +35,7 @@ namespace DGP.UnitySignals.Editor.Tests
         {
             FloatValueSignal oxygenRemaining = new(1.0f);
             float threshold = 0.25f;
-            CalculatedSignal<bool> oxygenLow = new(() => oxygenRemaining.GetValue() < threshold);
+            ComputedSignal<bool> oxygenLow = new(() => oxygenRemaining.GetValue() < threshold);
             
             Assert.IsFalse(oxygenLow.GetValue());
             
