@@ -26,14 +26,12 @@ namespace DGP.UnitySignals.Signals
             if (ReferenceEquals(_value, value))
                 return;
             
-            // Unsubscribe from old value
             if (_value != null)
                 _value.PropertyChanged -= OnPropertyChanged;
             
             TValueType oldValue = _value;
             _value = value;
             
-            // Subscribe to new value
             if (_value != null)
                 _value.PropertyChanged += OnPropertyChanged;
             
@@ -42,7 +40,6 @@ namespace DGP.UnitySignals.Signals
 
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            // Re-notify observers that the object's internal state changed
             NotifyObservers(_value, _value);
         }
 

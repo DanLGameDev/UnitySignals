@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace DGP.UnitySignals.Signals
 {
-    public class ValueSignal<TValueType> : SignalBase<TValueType> where TValueType : IEquatable<TValueType>
+    public class ValueSignal<TValueType> : SignalBase<TValueType>
     {
         private TValueType _value;
 
