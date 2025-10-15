@@ -13,6 +13,8 @@ namespace DGP.UnitySignals.Signals
         
         public override TSignalType GetValue() => _currentValue;
         
+        public TSignalType Value => _currentValue;
+
         public ComputedSignal(Expression<Func<TSignalType>> signalExpression)
         {
             _signalExpression = signalExpression;
