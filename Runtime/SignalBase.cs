@@ -68,22 +68,24 @@ namespace DGP.UnitySignals
         public abstract TValueType GetValue();
         
         protected void NotifyObservers(TValueType oldValue, TValueType newValue)
-        {
-            SignalChanged?.Invoke(this);
-            SignalValueChanged?.Invoke(this, oldValue, newValue);
-            
-            foreach (var observer in _untypedObservers)
-                observer(this);
-            
-            foreach (var observer in _objectObservers)
-                observer.SignalValueChanged(this, newValue, oldValue);
-            
-            foreach (var observer in _delegateObservers)
-                observer(this, oldValue, newValue);
-            
-            foreach (var observer in _actionObservers)
-                observer(newValue);
-        }
+		{
+    		// Handle the events first (these aren't affected by the iteration issue)
+    		SignalChanged?.Invoke(this);
+    		SignalValueChanged?.Invoke(this, oldValue, newValue);
+    
+    		// Iterate in reverse for all observer collections
+		    for (int i = _untypedObservers.Count - 1; i >= 0; i--)
+		        _untypedObservers[i](this);
+    
+    		for (int i = _objectObservers.Count - 1; i >= 0; i--)
+        		_objectObservers[i].SignalValueChanged(this, newValue, oldValue);
+    
+		    for (int i = _delegateObservers.Count - 1; i >= 0; i--)
+        		_delegateObservers[i](this, oldValue, newValue);
+   
+   		 	for (int i = _actionObservers.Count - 1; i >= 0; i--)
+        		_actionObservers[i](newValue);
+		}
         
         public void ClearObservers()
         {
