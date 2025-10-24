@@ -1,71 +1,72 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Collections.ObjectModel;
 
 namespace DGP.UnitySignals.Collections
 {
-    public class ObservableList<TValueType> : IObservableCollection<TValueType>, IList<TValueType>, ICollection<TValueType>, IEnumerable<TValueType>, IEnumerable
+    public class ObservableList<TValueType> : SignalBase<ObservableList<TValueType>>, 
+                                               IList<TValueType>, 
+                                               ICollection<TValueType>, 
+                                               IEnumerable<TValueType>, 
+                                               INotifyCollectionChanged
     {
-        public event IObservableCollection<TValueType>.ListChangedHandler ItemAdded;
-        public event IObservableCollection<TValueType>.ListChangedHandler ItemRemoved;
-        public event IObservableCollection<TValueType>.ListItemChangedHandler ItemChanged;
-        public event EventHandler Cleared;
-
-        private readonly List<TValueType> _list = new List<TValueType>();
-
-        public IEnumerator<TValueType> GetEnumerator() => _list.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        public void Add(TValueType item)
-        {
-            _list.Add(item);
-            ItemAdded?.Invoke(this, new ListChangedEventArgs<TValueType> { Item = item, Index = _list.Count - 1 });
-        }
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
         
+        private readonly ObservableCollection<TValueType> _collection;
 
-        public void Clear()
+        public ObservableList()
         {
-            _list.Clear();
-            Cleared?.Invoke(this, EventArgs.Empty);
+            _collection = new ObservableCollection<TValueType>();
+            _collection.CollectionChanged += OnCollectionChanged;
         }
 
-        public bool Contains(TValueType item) => _list.Contains(item);
-        public void CopyTo(TValueType[] array, int arrayIndex) => _list.CopyTo(array, arrayIndex);
-
-        public bool Remove(TValueType item)
+        public ObservableList(IEnumerable<TValueType> collection)
         {
-            var index = _list.IndexOf(item);
-            if (index == -1) return false;
-            _list.RemoveAt(index);
-            ItemRemoved?.Invoke(this, new ListChangedEventArgs<TValueType> { Item = item, Index = index });
-            return true;
+            _collection = new ObservableCollection<TValueType>(collection);
+            _collection.CollectionChanged += OnCollectionChanged;
         }
 
-        public int Count => _list.Count;
-        public bool IsReadOnly => false;
-        public int IndexOf(TValueType item) => _list.IndexOf(item);
-
-        public void Insert(int index, TValueType item)
+        private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            _list.Insert(index, item);
-            ItemAdded?.Invoke(this, new ListChangedEventArgs<TValueType> { Item = item, Index = index });
+            CollectionChanged?.Invoke(this, e);
+            NotifyObservers(this, this);
         }
 
-        public void RemoveAt(int index)
-        {
-            var item = _list[index];
-            _list.RemoveAt(index);
-            ItemRemoved?.Invoke(this, new ListChangedEventArgs<TValueType> { Item = item, Index = index });
-        }
+        public override ObservableList<TValueType> GetValue() => this;
+        public ObservableList<TValueType> Value => GetValue();
 
+        // IList<T> implementation - delegates to internal ObservableCollection
         public TValueType this[int index]
         {
-            get => _list[index];
-            set {
-                var oldValue = _list[index];
-                _list[index] = value;
-                ItemChanged?.Invoke(this, new ListItemChangedEventArgs<TValueType> { Index = index, OldItem = oldValue, NewItem = value });
+            get => _collection[index];
+            set => _collection[index] = value;
+        }
+
+        public int Count => _collection.Count;
+        public bool IsReadOnly => false;
+
+        public void Add(TValueType item) => _collection.Add(item);
+        public void Clear() => _collection.Clear();
+        public bool Contains(TValueType item) => _collection.Contains(item);
+        public void CopyTo(TValueType[] array, int arrayIndex) => _collection.CopyTo(array, arrayIndex);
+        public IEnumerator<TValueType> GetEnumerator() => _collection.GetEnumerator();
+        public int IndexOf(TValueType item) => _collection.IndexOf(item);
+        public void Insert(int index, TValueType item) => _collection.Insert(index, item);
+        public bool Remove(TValueType item) => _collection.Remove(item);
+        public void RemoveAt(int index) => _collection.RemoveAt(index);
+        
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && _collection != null)
+            {
+                _collection.CollectionChanged -= OnCollectionChanged;
             }
+
+            base.Dispose(disposing);
         }
     }
 }

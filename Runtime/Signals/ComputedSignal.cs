@@ -118,20 +118,6 @@ namespace DGP.UnitySignals.Signals
             _isDirty = false;
         }
         
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing) {
-                foreach (var signal in _sourceSignals) {
-                    signal.SignalChanged -= OnSourceSignalChanged;
-                    signal.SignalDied -= OnDependencyDied;
-                }
-        
-                _sourceSignals.Clear();
-            }
-    
-            base.Dispose(disposing);
-        }
-        
         private void FindDependentSignals(Expression expression, int depth = 0)
         {
             if (depth > 32)
@@ -190,6 +176,21 @@ namespace DGP.UnitySignals.Signals
             } catch (Exception ex) {
                 Debug.LogWarning($"Error subscribing to signal: {ex.Message}");
             }
+        }
+        
+        // IDisposable implementation
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) {
+                foreach (var signal in _sourceSignals) {
+                    signal.SignalChanged -= OnSourceSignalChanged;
+                    signal.SignalDied -= OnDependencyDied;
+                }
+        
+                _sourceSignals.Clear();
+            }
+    
+            base.Dispose(disposing);
         }
     }
 }
