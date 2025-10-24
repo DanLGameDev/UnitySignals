@@ -8,6 +8,7 @@ namespace DGP.UnitySignals.Signals
         where TObjectType : class
     {
         public event IEmitSignals.SignalChangedDelegate SignalChanged;
+        public event IEmitSignals.SignalDirtiedDelegate SignalDirtied;
         public event IEmitSignals<TObjectType>.SignalChangedHandler SignalValueChanged;
         public event IEmitSignals.SignalDiedDelegate SignalDied;
 

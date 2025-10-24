@@ -6,6 +6,7 @@ namespace DGP.UnitySignals
     public abstract class SignalBase<TValueType> : IEmitSignals<TValueType>, IDisposable
     {
         public event IEmitSignals.SignalChangedDelegate SignalChanged;
+        public event IEmitSignals.SignalDirtiedDelegate SignalDirtied;
         public event IEmitSignals<TValueType>.SignalChangedHandler SignalValueChanged;
         
         private readonly ObserverManager<TValueType> _observerManager = new();
@@ -40,12 +41,15 @@ namespace DGP.UnitySignals
             _isDead = true;
             SignalDied?.Invoke(this);
         }
+        
+        protected void SignalAsDirty() => SignalDirtied?.Invoke(this);
 
         /// <summary>
         /// Notifies all observers that the signal's value has changed
         /// </summary>
         protected void NotifyObservers(TValueType oldValue, TValueType newValue)
         {
+            SignalAsDirty();
             SignalChanged?.Invoke(this);
             SignalValueChanged?.Invoke(this, oldValue, newValue);
             

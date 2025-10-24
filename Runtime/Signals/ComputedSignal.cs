@@ -11,7 +11,9 @@ namespace DGP.UnitySignals.Signals
         private readonly Func<TSignalType> _signalDelegate;
         private TSignalType _currentValue;
         private readonly HashSet<IEmitSignals> _sourceSignals = new();
-        private bool _isCalculating = false; // Simple guard against recursive calculation
+        private bool _isCalculating = false;
+
+        private bool _isDirty = false;
         
         public override TSignalType GetValue()
         {
@@ -22,7 +24,7 @@ namespace DGP.UnitySignals.Signals
                     MarkAsDead();
             }
             
-            return _currentValue;
+            return _isDirty ? _signalDelegate.Invoke() : _currentValue;
         }
         
         public TSignalType Value => GetValue();
@@ -36,6 +38,7 @@ namespace DGP.UnitySignals.Signals
             
             foreach (var signal in _sourceSignals)
             {
+                signal.SignalDirtied += OnSourceSignalDirtied;
                 signal.SignalChanged += OnSourceSignalChanged;
                 signal.SignalDied += OnDependencyDied;
             }
@@ -67,9 +70,12 @@ namespace DGP.UnitySignals.Signals
         /// Recalculates the value of this computed signal
         /// </summary>
         /// <param name="notifyObservers">Whether to notify observers if the value changes</param>
+        /// <param name="newCurrentValue">The newly calculated value</param>
         /// <returns>True if the value changed, false otherwise</returns>
-        private bool RecalculateValue(bool notifyObservers)
+        private bool RecalculateValue(bool notifyObservers, out TSignalType newCurrentValue)
         {
+            newCurrentValue = _currentValue;
+            
             if (_isCalculating)
                 return false;
                 
@@ -82,7 +88,7 @@ namespace DGP.UnitySignals.Signals
                 bool hasChanged = !EqualityComparer<TSignalType>.Default.Equals(newValue, oldValue);
                 
                 if (hasChanged) {
-                    _currentValue = newValue;
+                    newCurrentValue = newValue;
                     
                     if (notifyObservers)
                         NotifyObservers(oldValue, newValue);
@@ -96,25 +102,22 @@ namespace DGP.UnitySignals.Signals
             }
         }
 
+        private void OnSourceSignalDirtied(IEmitSignals sender)
+        {
+            _isDirty = true;
+            SignalAsDirty();
+        }
+
         private void OnSourceSignalChanged(IEmitSignals sender)
         {
             if (_isCalculating)
                 return;
             
-            RecalculateValue(notifyObservers: true);
+            RecalculateValue(notifyObservers: true, out var newValue);
+            _currentValue = newValue;
+            _isDirty = false;
         }
         
-        /// <summary>
-        /// Forces recalculation of the signal's value, regardless of dependency state
-        /// </summary>
-        public void ForceUpdate()
-        {
-            if (_isCalculating)
-                return;
-                
-            RecalculateValue(notifyObservers: true);
-        }
-
         protected override void Dispose(bool disposing)
         {
             if (disposing) {

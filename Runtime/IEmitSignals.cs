@@ -8,6 +8,9 @@ namespace DGP.UnitySignals
         public delegate void SignalChangedDelegate(IEmitSignals sender);
         public event SignalChangedDelegate SignalChanged;
         
+        public delegate void SignalDirtiedDelegate(IEmitSignals sender);
+        public event SignalDirtiedDelegate SignalDirtied;
+        
         public delegate void SignalDiedDelegate(IEmitSignals sender);
         public event SignalDiedDelegate SignalDied;
         public bool IsDead { get; }

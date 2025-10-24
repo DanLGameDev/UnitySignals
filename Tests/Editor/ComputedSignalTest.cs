@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics.Contracts;
 using DGP.UnitySignals.Signals;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace DGP.UnitySignals.Editor.Tests
 {
@@ -248,6 +250,34 @@ namespace DGP.UnitySignals.Editor.Tests
 
             // The computed signal should return its last known value
             Assert.AreEqual(initialValue, valueAfterDeath, "Dead computed signal should return last known value");
+        }
+
+        [Test]
+        public void TestComplexSignalArrangement()
+        {
+            IntegerValueSignal signalA = new(1);
+
+            ComputedSignal<int> computedA = new ComputedSignal<int>(() => signalA.GetValue()+1);
+            ComputedSignal<int> computedB = new ComputedSignal<int>(() => signalA.GetValue()*3);
+            
+            ComputedSignal<int> computedC = new ComputedSignal<int>(() => computedB.GetValue() + computedA.GetValue());
+            
+            int computedACallCount = 0;
+            int computedBCallCount = 0;
+            int computedCCallCount = 0;
+            
+            computedA.AddObserver((Action<int>)(newValue => { computedACallCount++; }));
+            computedB.AddObserver((Action<int>)(newValue => { computedBCallCount++; }));
+            computedC.AddObserver((Action<int>)(newValue => { computedCCallCount++; }));
+            
+            Assert.AreEqual(5, computedC.GetValue(), "Initial computedC value incorrect");
+
+            signalA.Value = 5;
+            Assert.AreEqual(1, computedACallCount, "computedA should have been called once after signalA change");
+            Assert.AreEqual(1, computedBCallCount, "computedB should have been called once after signalA change");
+            Assert.AreEqual(1, computedCCallCount, "computedC should have been called once after signalA change");
+            
+            Assert.AreEqual(21, computedC.GetValue(), "Updated computedC value incorrect");
         }
     }
 }
