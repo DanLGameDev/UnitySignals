@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using UnityEngine;
 
 namespace DGP.UnitySignals.Signals
 {
@@ -10,28 +11,122 @@ namespace DGP.UnitySignals.Signals
         private readonly Func<TSignalType> _signalDelegate;
         private TSignalType _currentValue;
         private readonly HashSet<IEmitSignals> _sourceSignals = new();
+        private bool _isCalculating = false; // Simple guard against recursive calculation
         
-        public override TSignalType GetValue() => _currentValue;
+        public override TSignalType GetValue()
+        {
+            if (HasDeadDependencies()) {
+                Debug.LogWarning("ComputedSignal accessing value with dead dependencies");
+                
+                if (!IsDead)
+                    MarkAsDead();
+            }
+            
+            return _currentValue;
+        }
         
-        public TSignalType Value => _currentValue;
+        public TSignalType Value => GetValue();
 
         public ComputedSignal(Expression<Func<TSignalType>> signalExpression)
         {
             _signalExpression = signalExpression;
             _signalDelegate = signalExpression.Compile();
-            _currentValue = _signalDelegate();
-
+            
             FindDependentSignals(signalExpression.Body);
+            
+            foreach (var signal in _sourceSignals)
+            {
+                signal.SignalChanged += OnSourceSignalChanged;
+                signal.SignalDied += OnDependencyDied;
+            }
+            
+            _currentValue = _signalDelegate();
+        }
+        
+        private void OnDependencyDied(IEmitSignals sender)
+        {
+            MarkAsDead();
+            Debug.LogWarning($"ComputedSignal marked as dead because dependency {sender} was disposed");
+        }
+        
+        private bool HasDeadDependencies()
+        {
+            foreach (var signal in _sourceSignals)
+            {
+                if (signal.IsDead)
+                    return true;
+            }
+    
+            return false;
+        }
+
+        // Add a public method to check health explicitly
+        public bool HasValidDependencies() => !HasDeadDependencies();
+
+        /// <summary>
+        /// Recalculates the value of this computed signal
+        /// </summary>
+        /// <param name="notifyObservers">Whether to notify observers if the value changes</param>
+        /// <returns>True if the value changed, false otherwise</returns>
+        private bool RecalculateValue(bool notifyObservers)
+        {
+            if (_isCalculating)
+                return false;
+                
+            _isCalculating = true;
+            
+            try {
+                var oldValue = _currentValue;
+                var newValue = _signalDelegate();
+                
+                bool hasChanged = !EqualityComparer<TSignalType>.Default.Equals(newValue, oldValue);
+                
+                if (hasChanged) {
+                    _currentValue = newValue;
+                    
+                    if (notifyObservers)
+                        NotifyObservers(oldValue, newValue);
+                    
+                    return true;
+                }
+                
+                return false;
+            } finally {
+                _isCalculating = false;
+            }
+        }
+
+        private void OnSourceSignalChanged(IEmitSignals sender)
+        {
+            if (_isCalculating)
+                return;
+            
+            RecalculateValue(notifyObservers: true);
+        }
+        
+        /// <summary>
+        /// Forces recalculation of the signal's value, regardless of dependency state
+        /// </summary>
+        public void ForceUpdate()
+        {
+            if (_isCalculating)
+                return;
+                
+            RecalculateValue(notifyObservers: true);
         }
 
         protected override void Dispose(bool disposing)
         {
+            if (disposing) {
+                foreach (var signal in _sourceSignals) {
+                    signal.SignalChanged -= OnSourceSignalChanged;
+                    signal.SignalDied -= OnDependencyDied;
+                }
+        
+                _sourceSignals.Clear();
+            }
+    
             base.Dispose(disposing);
-            
-            foreach (var signal in _sourceSignals)
-                signal.SignalChanged -= OnSourceSignalChanged;
-            
-            _sourceSignals.Clear();
         }
         
         private void FindDependentSignals(Expression expression, int depth = 0)
@@ -74,25 +169,23 @@ namespace DGP.UnitySignals.Signals
 
         private void SubscribeToSignal(MemberExpression memberExpression)
         {
-            if (memberExpression == null) return;
+            if (memberExpression == null) 
+                return;
 
-            var signal = Expression.Lambda(memberExpression).Compile().DynamicInvoke();
-            if (signal is IEmitSignals sourceSignal)
-            {
-                sourceSignal.AddObserver(OnSourceSignalChanged);
-                _sourceSignals.Add(sourceSignal);
-            }
-        }
+            try {
+                var signal = Expression.Lambda(memberExpression).Compile().DynamicInvoke();
+                
+                if (signal is IEmitSignals sourceSignal) {
+                    if (ReferenceEquals(sourceSignal, (IEmitSignals)this))
+                    {
+                        Debug.LogWarning("ComputedSignal detected self-reference in expression. Ignoring to prevent infinite recursion.");
+                        return;
+                    }
 
-        private void OnSourceSignalChanged(IEmitSignals sender)
-        {
-            var oldValue = _currentValue;
-            var newValue = _signalDelegate();
-    
-            if (!EqualityComparer<TSignalType>.Default.Equals(newValue, oldValue))
-            {
-                _currentValue = newValue;
-                NotifyObservers(oldValue, newValue);
+                    _sourceSignals.Add(sourceSignal);
+                }
+            } catch (Exception ex) {
+                Debug.LogWarning($"Error subscribing to signal: {ex.Message}");
             }
         }
     }

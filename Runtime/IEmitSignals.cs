@@ -1,4 +1,5 @@
 using System;
+using DGP.UnitySignals.Observers;
 
 namespace DGP.UnitySignals
 {
@@ -6,6 +7,10 @@ namespace DGP.UnitySignals
     {
         public delegate void SignalChangedDelegate(IEmitSignals sender);
         public event SignalChangedDelegate SignalChanged;
+        
+        public delegate void SignalDiedDelegate(IEmitSignals sender);
+        public event SignalDiedDelegate SignalDied;
+        public bool IsDead { get; }
         
         public void AddObserver(SignalChangedDelegate observer);
         public void RemoveObserver(SignalChangedDelegate observer);

@@ -1,3 +1,4 @@
+using DGP.UnitySignals.Observers;
 using DGP.UnitySignals.Signals;
 using NUnit.Framework;
 

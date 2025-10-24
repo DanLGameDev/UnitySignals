@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+using DGP.UnitySignals.Observers;
+using UnityEngine;
 
 namespace DGP.UnitySignals.Signals
 {
@@ -8,12 +9,14 @@ namespace DGP.UnitySignals.Signals
     {
         public event IEmitSignals.SignalChangedDelegate SignalChanged;
         public event IEmitSignals<TObjectType>.SignalChangedHandler SignalValueChanged;
+        public event IEmitSignals.SignalDiedDelegate SignalDied;
 
         private TObjectType _value;
-        private readonly List<IEmitSignals.SignalChangedDelegate> _untypedObservers = new();
-        private readonly List<ISignalObserver<TObjectType>> _objectObservers = new();
-        private readonly List<IEmitSignals<TObjectType>.SignalChangedHandler> _delegateObservers = new();
-        private readonly List<Action<TObjectType>> _actionObservers = new();
+        private readonly ObserverManager<TObjectType> _observerManager = new();
+        private bool _isDead = false;
+        private bool _isDirty = false;
+
+        public bool IsDead => _isDead;
 
         public TObjectType GetValue() => _value;
         public static implicit operator TObjectType(ReferenceSignal<TObjectType> signal) => signal?.GetValue();
@@ -27,88 +30,110 @@ namespace DGP.UnitySignals.Signals
 
             TObjectType oldValue = _value;
             _value = value;
+            
+            // Mark as dirty
+            MarkDirty();
+            
+            // Notify observers
             NotifyObservers(oldValue, value);
         }
 
-        // IEmitSignals
+        // IEmitSignals implementation
         public void AddObserver(IEmitSignals.SignalChangedDelegate observer)
         {
-            if (observer == null) throw new ArgumentNullException(nameof(observer));
-            _untypedObservers.Add(observer);
+            _observerManager.AddObserver(observer);
         }
 
         public void RemoveObserver(IEmitSignals.SignalChangedDelegate observer)
         {
-            if (observer == null) throw new ArgumentNullException(nameof(observer));
-            _untypedObservers.Remove(observer);
+            _observerManager.RemoveObserver(observer);
         }
 
-        // IEmitSignals<TObjectType>
+        // IEmitSignals<TObjectType> implementation
         public void AddObserver(ISignalObserver<TObjectType> observer)
         {
-            if (observer == null) throw new ArgumentNullException(nameof(observer));
-            _objectObservers.Add(observer);
+            _observerManager.AddObserver(observer);
         }
 
         public void RemoveObserver(ISignalObserver<TObjectType> observer)
         {
-            if (observer == null) throw new ArgumentNullException(nameof(observer));
-            _objectObservers.Remove(observer);
+            _observerManager.RemoveObserver(observer);
         }
 
         public void AddObserver(IEmitSignals<TObjectType>.SignalChangedHandler observer)
         {
-            if (observer == null) throw new ArgumentNullException(nameof(observer));
-            _delegateObservers.Add(observer);
+            _observerManager.AddObserver(observer);
         }
 
         public void RemoveObserver(IEmitSignals<TObjectType>.SignalChangedHandler observer)
         {
-            if (observer == null) throw new ArgumentNullException(nameof(observer));
-            _delegateObservers.Remove(observer);
+            _observerManager.RemoveObserver(observer);
         }
 
         public void AddObserver(Action<TObjectType> observer)
         {
-            if (observer == null) throw new ArgumentNullException(nameof(observer));
-            _actionObservers.Add(observer);
+            _observerManager.AddObserver(observer);
         }
 
         public void RemoveObserver(Action<TObjectType> observer)
         {
-            if (observer == null) throw new ArgumentNullException(nameof(observer));
-            _actionObservers.Remove(observer);
+            _observerManager.RemoveObserver(observer);
         }
 
         protected void NotifyObservers(TObjectType oldValue, TObjectType newValue)
         {
+            // Raise events directly
             SignalChanged?.Invoke(this);
             SignalValueChanged?.Invoke(this, oldValue, newValue);
-
-            foreach (var observer in _untypedObservers)
-                observer(this);
-
-            foreach (var observer in _objectObservers)
-                observer.SignalValueChanged(this, oldValue, newValue);
-
-            foreach (var observer in _delegateObservers)
-                observer(this, oldValue, newValue);
-
-            foreach (var observer in _actionObservers)
-                observer(newValue);
+            
+            // Use observer manager for other observers
+            _observerManager.NotifyObservers(this, oldValue, newValue);
+            
+            // Clear dirty flag after notification
+            _isDirty = false;
+        }
+        
+        /// <summary>
+        /// Marks the signal as dirty, indicating that its value has changed
+        /// </summary>
+        protected void MarkDirty()
+        {
+            _isDirty = true;
+        }
+        
+        /// <summary>
+        /// Checks if the signal is currently marked as dirty
+        /// </summary>
+        public bool IsDirty()
+        {
+            return _isDirty;
+        }
+        
+        /// <summary>
+        /// Marks the signal as dead and notifies observers
+        /// </summary>
+        protected void MarkAsDead()
+        {
+            if (!_isDead)
+            {
+                _isDead = true;
+                SignalDied?.Invoke(this);
+                Debug.Log($"ReferenceSignal has been marked as dead");
+            }
         }
 
         public void ClearObservers()
         {
-            _untypedObservers.Clear();
-            _objectObservers.Clear();
-            _delegateObservers.Clear();
-            _actionObservers.Clear();
+            _observerManager.ClearObservers();
         }
 
         public void Dispose()
         {
-            ClearObservers();
+            if (!_isDead)
+            {
+                MarkAsDead();
+                ClearObservers();
+            }
             GC.SuppressFinalize(this);
         }
     }

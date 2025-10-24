@@ -1,6 +1,4 @@
-using System;
-
-namespace DGP.UnitySignals
+namespace DGP.UnitySignals.Observers
 {
     public interface ISignalObserver<TValueType>
     {
