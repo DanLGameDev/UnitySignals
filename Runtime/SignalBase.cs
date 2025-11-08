@@ -12,9 +12,8 @@ namespace DGP.UnitySignals
         private readonly ObserverManager<TValueType> _observerManager = new();
         
         public event IEmitSignals.SignalDiedDelegate SignalDied;
-        private bool _isDead;
-        public bool IsDead => _isDead;
-        
+        public bool IsDead { get; private set; }
+
         public static implicit operator TValueType(SignalBase<TValueType> signal) => signal.GetValue();
         
         // IEmitSignals implementation
@@ -35,10 +34,10 @@ namespace DGP.UnitySignals
         
         protected void MarkAsDead()
         {
-            if (_isDead) 
+            if (IsDead) 
                 return;
             
-            _isDead = true;
+            IsDead = true;
             SignalDied?.Invoke(this);
         }
         
