@@ -1,16 +1,11 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 namespace DGP.UnitySignals.Collections
 {
-    public class ObservableList<TValueType> : SignalBase<ObservableList<TValueType>>, 
-                                               IList<TValueType>, 
-                                               ICollection<TValueType>, 
-                                               IEnumerable<TValueType>, 
-                                               INotifyCollectionChanged
+    public class ObservableList<TValueType> : SignalBase<ObservableList<TValueType>>, IList<TValueType>, INotifyCollectionChanged
     {
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         
