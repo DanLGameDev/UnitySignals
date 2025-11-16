@@ -65,6 +65,19 @@ namespace DGP.UnitySignals.Signals
 
         // Add a public method to check health explicitly
         public bool HasValidDependencies() => !HasDeadDependencies();
+        
+        /// <summary>
+        /// Manually triggers a recalculation of this computed signal.
+        /// Useful when the computation depends on non-reactive values.
+        /// </summary>
+        public TSignalType Recalculate()
+        {
+            RecalculateValue(notifyObservers: true, out var newValue);
+            _currentValue = newValue;
+            _isDirty = false;
+            
+            return newValue;
+        }
 
         /// <summary>
         /// Recalculates the value of this computed signal

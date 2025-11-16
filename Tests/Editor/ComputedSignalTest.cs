@@ -203,19 +203,17 @@ namespace DGP.UnitySignals.Editor.Tests
             var baseSignal = new IntegerValueSignal(42);
             var computed1 = new ComputedSignal<int>(() => baseSignal.GetValue() * 2);
             var computed2 = new ComputedSignal<int>(() => computed1.GetValue() + 1);
-    
+
             bool computed1DiedEventFired = false;
-            computed1.SignalDied += (sender) => {
-                computed1DiedEventFired = true;
-            };
-    
+            computed1.SignalDied += (sender) => { computed1DiedEventFired = true; };
+
             Assert.IsFalse(computed2.IsDead, "Computed signal should not be dead initially");
-    
+
             baseSignal.Dispose();
-    
+
             // Check if the event fired
             Assert.IsTrue(computed1DiedEventFired, "SignalDied event should fire for computed1");
-    
+
             // Death should propagate through the chain
             Assert.IsTrue(computed1.IsDead, "First computed signal should be dead after base signal death");
             Assert.IsTrue(computed2.IsDead, "Second computed signal should be dead after dependency chain death");
@@ -257,27 +255,104 @@ namespace DGP.UnitySignals.Editor.Tests
         {
             IntegerValueSignal signalA = new(1);
 
-            ComputedSignal<int> computedA = new ComputedSignal<int>(() => signalA.GetValue()+1);
-            ComputedSignal<int> computedB = new ComputedSignal<int>(() => signalA.GetValue()*3);
-            
+            ComputedSignal<int> computedA = new ComputedSignal<int>(() => signalA.GetValue() + 1);
+            ComputedSignal<int> computedB = new ComputedSignal<int>(() => signalA.GetValue() * 3);
+
             ComputedSignal<int> computedC = new ComputedSignal<int>(() => computedB.GetValue() + computedA.GetValue());
-            
+
             int computedACallCount = 0;
             int computedBCallCount = 0;
             int computedCCallCount = 0;
-            
+
             computedA.AddObserver((Action<int>)(newValue => { computedACallCount++; }));
             computedB.AddObserver((Action<int>)(newValue => { computedBCallCount++; }));
             computedC.AddObserver((Action<int>)(newValue => { computedCCallCount++; }));
-            
+
             Assert.AreEqual(5, computedC.GetValue(), "Initial computedC value incorrect");
 
             signalA.Value = 5;
             Assert.AreEqual(1, computedACallCount, "computedA should have been called once after signalA change");
             Assert.AreEqual(1, computedBCallCount, "computedB should have been called once after signalA change");
             Assert.AreEqual(1, computedCCallCount, "computedC should have been called once after signalA change");
-            
+
             Assert.AreEqual(21, computedC.GetValue(), "Updated computedC value incorrect");
+        }
+
+        [Test]
+        public void TestManualRecalculate_WithNonReactiveVariable()
+        {
+            int externalValue = 5;
+            var signal = new ComputedSignal<int>(() => externalValue * 2);
+
+            Assert.AreEqual(10, signal.GetValue(), "Initial value should be 10");
+
+            // Change external value - signal won't know automatically
+            externalValue = 10;
+            Assert.AreEqual(10, signal.GetValue(), "Value should still be 10 (not recalculated)");
+
+            // Manual recalculate
+            int result = signal.Recalculate();
+            Assert.AreEqual(20, result, "Recalculate should return new value of 20");
+            Assert.AreEqual(20, signal.GetValue(), "GetValue should now return 20");
+        }
+
+        [Test]
+        public void TestManualRecalculate_NotifiesObservers()
+        {
+            int externalValue = 5;
+            var signal = new ComputedSignal<int>(() => externalValue * 2);
+
+            int observerCallCount = 0;
+            int lastReceivedValue = 0;
+
+            signal.AddObserver((int newValue) => {
+                observerCallCount++;
+                lastReceivedValue = newValue;
+            });
+
+            externalValue = 10;
+            signal.Recalculate();
+
+            Assert.AreEqual(1, observerCallCount, "Observer should be called once");
+            Assert.AreEqual(20, lastReceivedValue, "Observer should receive new value of 20");
+        }
+
+        [Test]
+        public void TestManualRecalculate_NoChangeNoNotification()
+        {
+            int externalValue = 5;
+            var signal = new ComputedSignal<int>(() => externalValue * 2);
+
+            int observerCallCount = 0;
+            signal.AddObserver((int newValue) => observerCallCount++);
+
+            // Recalculate without changing externalValue
+            int result = signal.Recalculate();
+
+            Assert.AreEqual(10, result, "Should return same value");
+            Assert.AreEqual(0, observerCallCount, "Observer should not be called when value doesn't change");
+        }
+
+        [Test]
+        public void TestManualRecalculate_MixedReactiveAndNonReactive()
+        {
+            var reactiveSignal = new IntegerValueSignal(5);
+            int nonReactiveValue = 3;
+
+            var computed = new ComputedSignal<int>(() => reactiveSignal.GetValue() + nonReactiveValue);
+
+            Assert.AreEqual(8, computed.GetValue(), "Initial: 5 + 3 = 8");
+
+            // Change reactive signal - should auto-update
+            reactiveSignal.Value = 10;
+            Assert.AreEqual(13, computed.GetValue(), "Reactive change: 10 + 3 = 13");
+
+            // Change non-reactive value - needs manual recalculate
+            nonReactiveValue = 7;
+            Assert.AreEqual(13, computed.GetValue(), "Before recalculate: still 13");
+
+            int result = computed.Recalculate();
+            Assert.AreEqual(17, result, "After recalculate: 10 + 7 = 17");
         }
     }
 }
