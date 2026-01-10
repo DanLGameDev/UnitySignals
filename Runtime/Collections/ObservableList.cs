@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,6 +9,8 @@ namespace DGP.UnitySignals.Collections
     public class ObservableList<TValueType> : SignalBase<ObservableList<TValueType>>, IList<TValueType>, INotifyCollectionChanged
     {
         public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event Action<TValueType, int> ItemAdded;
+        public event Action<TValueType, int> ItemRemoved;
         
         private readonly ObservableCollection<TValueType> _collection;
 
@@ -25,6 +28,62 @@ namespace DGP.UnitySignals.Collections
 
         private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            // Handle add operations
+            if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
+            {
+                for (int i = 0; i < e.NewItems.Count; i++)
+                {
+                    var item = (TValueType)e.NewItems[i];
+                    var index = e.NewStartingIndex + i;
+                    ItemAdded?.Invoke(item, index);
+                }
+            }
+            
+            // Handle remove operations
+            if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems != null)
+            {
+                for (int i = 0; i < e.OldItems.Count; i++)
+                {
+                    var item = (TValueType)e.OldItems[i];
+                    var index = e.OldStartingIndex + i;
+                    ItemRemoved?.Invoke(item, index);
+                }
+            }
+            
+            // Handle replace operations (fire both removed and added)
+            if (e.Action == NotifyCollectionChangedAction.Replace)
+            {
+                if (e.OldItems != null)
+                {
+                    for (int i = 0; i < e.OldItems.Count; i++)
+                    {
+                        var item = (TValueType)e.OldItems[i];
+                        var index = e.OldStartingIndex + i;
+                        ItemRemoved?.Invoke(item, index);
+                    }
+                }
+                
+                if (e.NewItems != null)
+                {
+                    for (int i = 0; i < e.NewItems.Count; i++)
+                    {
+                        var item = (TValueType)e.NewItems[i];
+                        var index = e.NewStartingIndex + i;
+                        ItemAdded?.Invoke(item, index);
+                    }
+                }
+            }
+            
+            // Handle reset (Clear) - fire removed for all items
+            if (e.Action == NotifyCollectionChangedAction.Reset && e.OldItems != null)
+            {
+                for (int i = 0; i < e.OldItems.Count; i++)
+                {
+                    var item = (TValueType)e.OldItems[i];
+                    ItemRemoved?.Invoke(item, i);
+                }
+            }
+            
             CollectionChanged?.Invoke(this, e);
             NotifyObservers(this, this);
         }
