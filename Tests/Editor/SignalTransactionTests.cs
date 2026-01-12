@@ -194,5 +194,55 @@ namespace DGP.UnitySignals.Editor.Tests
             Assert.AreEqual(0, invoked2); // Unchanged - should not notify
             Assert.AreEqual(1, invoked3); // Changed - should notify
         }
+        
+        [Test]
+        public void TestTransactionCannotCommitAfterDispose()
+        {
+            var signal = new IntegerValueSignal(10);
+            var transaction = new SignalTransaction();
+    
+            transaction.Set(signal, 20);
+            transaction.Dispose();
+    
+            Assert.Throws<System.ObjectDisposedException>(() => {
+                transaction.Commit();
+            });
+        }
+        
+        [Test]
+        public void TestTransactionDoubleCommitIsIdempotent()
+        {
+            int invoked = 0;
+            var signal = new IntegerValueSignal(10);
+    
+            signal.AddObserver((sender, oldValue, newValue) => invoked++);
+    
+            var transaction = new SignalTransaction();
+            transaction.Set(signal, 20);
+    
+            transaction.Commit();
+            Assert.AreEqual(1, invoked);
+    
+            transaction.Commit(); // Second commit should do nothing
+            Assert.AreEqual(1, invoked); // Still 1
+        }
+        
+        [Test]
+        public void TestTransactionDoubleDisposeIsSafe()
+        {
+            int invoked = 0;
+            var signal = new IntegerValueSignal(10);
+    
+            signal.AddObserver((sender, oldValue, newValue) => invoked++);
+    
+            var transaction = new SignalTransaction();
+            transaction.Set(signal, 20);
+    
+            transaction.Dispose();
+            Assert.AreEqual(1, invoked);
+    
+            transaction.Dispose(); // Second dispose should be safe
+            Assert.AreEqual(1, invoked); // Still 1
+        }
     }
 }

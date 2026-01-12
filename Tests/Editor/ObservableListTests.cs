@@ -53,6 +53,110 @@ namespace DGP.UnitySignals.Editor.Tests
         }
 
         [Test]
+        public void TestObservableList_ItemAdded_Event()
+        {
+            // Arrange
+            var list = new ObservableList<string>();
+            var addedItems = new System.Collections.Generic.List<(string item, int index)>();
+            
+            list.ItemAdded += (item, index) => addedItems.Add((item, index));
+            
+            // Act
+            list.Add("first");
+            list.Add("second");
+            list.Insert(1, "middle");
+            
+            // Assert
+            Assert.AreEqual(3, addedItems.Count);
+            Assert.AreEqual(("first", 0), addedItems[0]);
+            Assert.AreEqual(("second", 1), addedItems[1]);
+            Assert.AreEqual(("middle", 1), addedItems[2]);
+        }
+
+        [Test]
+        public void TestObservableList_ItemRemoved_Event()
+        {
+            // Arrange
+            var list = new ObservableList<int>();
+            list.Add(10);
+            list.Add(20);
+            list.Add(30);
+            
+            var removedItems = new System.Collections.Generic.List<(int item, int index)>();
+            list.ItemRemoved += (item, index) => removedItems.Add((item, index));
+            
+            // Act
+            list.Remove(20);
+            list.RemoveAt(0);
+            
+            // Assert
+            Assert.AreEqual(2, removedItems.Count);
+            Assert.AreEqual((20, 1), removedItems[0]);
+            Assert.AreEqual((10, 0), removedItems[1]);
+        }
+
+        [Test]
+        public void TestObservableList_ItemReplaced_Event()
+        {
+            // Arrange
+            var list = new ObservableList<string>();
+            list.Add("first");
+            list.Add("second");
+            list.Add("third");
+            
+            var replacedItems = new System.Collections.Generic.List<(string oldItem, string newItem, int index)>();
+            list.ItemReplaced += (oldItem, newItem, index) => replacedItems.Add((oldItem, newItem, index));
+            
+            // Act
+            list[0] = "FIRST";
+            list[2] = "THIRD";
+            
+            // Assert
+            Assert.AreEqual(2, replacedItems.Count);
+            Assert.AreEqual(("first", "FIRST", 0), replacedItems[0]);
+            Assert.AreEqual(("third", "THIRD", 2), replacedItems[1]);
+        }
+
+        [Test]
+        public void TestObservableList_Cleared_Event()
+        {
+            // Arrange
+            var list = new ObservableList<int>();
+            list.Add(10);
+            list.Add(20);
+            list.Add(30);
+            
+            int clearedCount = 0;
+            list.Cleared += () => clearedCount++;
+            
+            // Act
+            list.Clear();
+            
+            // Assert
+            Assert.AreEqual(1, clearedCount, "Cleared event should fire once");
+            Assert.AreEqual(0, list.Count, "List should be empty");
+        }
+
+        [Test]
+        public void TestObservableList_Clear_DoesNotFireItemRemoved()
+        {
+            // Arrange
+            var list = new ObservableList<int>();
+            list.Add(10);
+            list.Add(20);
+            list.Add(30);
+            
+            int itemRemovedCount = 0;
+            list.ItemRemoved += (item, index) => itemRemovedCount++;
+            
+            // Act
+            list.Clear();
+            
+            // Assert
+            Assert.AreEqual(0, itemRemovedCount, "ItemRemoved should not fire during Clear");
+        }
+
+        [Test]
         public void TestObservableList_SignalObservers()
         {
             // Arrange
@@ -290,6 +394,39 @@ namespace DGP.UnitySignals.Editor.Tests
             // Assert
             Assert.AreSame(list, value, "GetValue should return the list itself");
             Assert.AreEqual(2, value.Count);
+        }
+
+        [Test]
+        public void TestObservableList_AllEventsFireTogether()
+        {
+            // Arrange
+            var list = new ObservableList<int>();
+            
+            int itemAddedFired = 0;
+            int itemRemovedFired = 0;
+            int itemReplacedFired = 0;
+            int clearedFired = 0;
+            int collectionChangedFired = 0;
+            
+            list.ItemAdded += (item, index) => itemAddedFired++;
+            list.ItemRemoved += (item, index) => itemRemovedFired++;
+            list.ItemReplaced += (oldItem, newItem, index) => itemReplacedFired++;
+            list.Cleared += () => clearedFired++;
+            list.CollectionChanged += (sender, e) => collectionChangedFired++;
+            
+            // Act
+            list.Add(1);
+            list.Add(2);
+            list[0] = 10;
+            list.Remove(2);
+            list.Clear();
+            
+            // Assert
+            Assert.AreEqual(2, itemAddedFired, "ItemAdded should fire for Add operations");
+            Assert.AreEqual(1, itemRemovedFired, "ItemRemoved should fire for Remove operations");
+            Assert.AreEqual(1, itemReplacedFired, "ItemReplaced should fire for indexer set");
+            Assert.AreEqual(1, clearedFired, "Cleared should fire for Clear operation");
+            Assert.AreEqual(5, collectionChangedFired, "CollectionChanged should fire for all operations");
         }
     }
 }

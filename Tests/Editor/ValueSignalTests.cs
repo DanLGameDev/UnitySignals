@@ -30,12 +30,6 @@ namespace DGP.UnitySignals.Editor.Tests
             Assert.AreEqual(1, invoked);
         }
         
-        private class TestIntObserver : ISignalObserver<int>
-        {
-            public int Invoked = 0;
-            public void SignalValueChanged(IEmitSignals<int> emitter, int oldValue, int newValue) => Invoked++;
-        }
-        
         [Test]
         public void TestObserverHandling()
         {

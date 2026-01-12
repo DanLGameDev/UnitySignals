@@ -299,7 +299,47 @@ namespace DGP.UnitySignals.Editor.Tests
             Assert.AreEqual(1, observer.Invoked); // Should still be 1
         }
 
-// Add this helper class at the bottom of the file
+        [Test]
+        public void TestReferenceSignalValueProperty()
+        {
+            var obj1 = new TestClass { Value = 10 };
+            var obj2 = new TestClass { Value = 20 };
+            var signal = new ReferenceSignal<ITestInterface>(obj1);
+    
+            Assert.AreEqual(obj1, signal.Value);
+
+            int invoked = 0;
+            signal.AddObserver((ITestInterface value) => invoked++);
+
+            signal.Value = obj2;
+            Assert.AreEqual(obj2, signal.Value);
+            Assert.AreEqual(1, invoked);
+        }
+        
+        [Test]
+        public void TestReferenceSignalSetValueSilently_SameReference_ReturnsFalse()
+        {
+            var obj = new TestClass { Value = 10 };
+            var signal = new ReferenceSignal<ITestInterface>(obj);
+    
+            bool changed = signal.SetValueSilently(obj); // Same reference
+    
+            Assert.IsFalse(changed);
+        }
+
+        [Test]
+        public void TestReferenceSignalSetValueSilently_DifferentReference_ReturnsTrue()
+        {
+            var obj1 = new TestClass { Value = 10 };
+            var obj2 = new TestClass { Value = 20 };
+            var signal = new ReferenceSignal<ITestInterface>(obj1);
+    
+            bool changed = signal.SetValueSilently(obj2); // Different reference
+    
+            Assert.IsTrue(changed);
+        }
+        
+
         private class TestReferenceObserver : ISignalObserver<ITestInterface>
         {
             public int Invoked = 0;

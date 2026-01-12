@@ -354,5 +354,51 @@ namespace DGP.UnitySignals.Editor.Tests
             int result = computed.Recalculate();
             Assert.AreEqual(17, result, "After recalculate: 10 + 7 = 17");
         }
+        
+        [Test]
+        public void TestGetValue_WithDeadDependencies_MarksSignalAsDead()
+        {
+            var baseSignal = new IntegerValueSignal(42);
+            var computed = new ComputedSignal<int>(() => baseSignal.GetValue() * 2);
+    
+            baseSignal.Dispose();
+    
+            // GetValue should detect dead dependency and mark itself as dead
+            int value = computed.GetValue();
+    
+            Assert.IsTrue(computed.IsDead, "Computed signal should be marked dead after accessing with dead dependencies");
+        }
+        
+        [Test]
+        public void TestComputedSignal_DetectsSelfReference()
+        {
+            ComputedSignal<int> computed = null;
+    
+            // This would create a self-reference, which should be caught
+            computed = new ComputedSignal<int>(() => computed != null ? computed.GetValue() + 1 : 0);
+    
+            // Should not throw, should handle gracefully
+            int value = computed.GetValue();
+            Assert.AreEqual(0, value, "Self-referencing computed should handle gracefully");
+        }
+        
+        [Test]
+        public void TestComputedSignalDispose_UnsubscribesFromSources()
+        {
+            var baseSignal = new IntegerValueSignal(42);
+            var computed = new ComputedSignal<int>(() => baseSignal.GetValue() * 2);
+    
+            int computedCallCount = 0;
+            computed.AddObserver((int newValue) => computedCallCount++);
+    
+            // Dispose computed signal
+            computed.Dispose();
+    
+            // Change base signal - computed should not react anymore
+            baseSignal.Value = 99;
+    
+            Assert.AreEqual(0, computedCallCount, "Disposed computed signal should not react to source changes");
+            Assert.IsTrue(computed.IsDead, "Disposed signal should be marked as dead");
+        }
     }
 }

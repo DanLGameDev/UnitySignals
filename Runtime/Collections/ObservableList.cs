@@ -11,6 +11,8 @@ namespace DGP.UnitySignals.Collections
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         public event Action<TValueType, int> ItemAdded;
         public event Action<TValueType, int> ItemRemoved;
+        public event Action<TValueType, TValueType, int> ItemReplaced;
+        public event Action Cleared;
         
         private readonly ObservableCollection<TValueType> _collection;
 
@@ -50,38 +52,25 @@ namespace DGP.UnitySignals.Collections
                 }
             }
             
-            // Handle replace operations (fire both removed and added)
+            // Handle replace operations
             if (e.Action == NotifyCollectionChangedAction.Replace)
             {
-                if (e.OldItems != null)
+                if (e.OldItems != null && e.NewItems != null)
                 {
                     for (int i = 0; i < e.OldItems.Count; i++)
                     {
-                        var item = (TValueType)e.OldItems[i];
+                        var oldItem = (TValueType)e.OldItems[i];
+                        var newItem = (TValueType)e.NewItems[i];
                         var index = e.OldStartingIndex + i;
-                        ItemRemoved?.Invoke(item, index);
-                    }
-                }
-                
-                if (e.NewItems != null)
-                {
-                    for (int i = 0; i < e.NewItems.Count; i++)
-                    {
-                        var item = (TValueType)e.NewItems[i];
-                        var index = e.NewStartingIndex + i;
-                        ItemAdded?.Invoke(item, index);
+                        ItemReplaced?.Invoke(oldItem, newItem, index);
                     }
                 }
             }
             
-            // Handle reset (Clear) - fire removed for all items
-            if (e.Action == NotifyCollectionChangedAction.Reset && e.OldItems != null)
+            // Handle reset (Clear)
+            if (e.Action == NotifyCollectionChangedAction.Reset)
             {
-                for (int i = 0; i < e.OldItems.Count; i++)
-                {
-                    var item = (TValueType)e.OldItems[i];
-                    ItemRemoved?.Invoke(item, i);
-                }
+                Cleared?.Invoke();
             }
             
             CollectionChanged?.Invoke(this, e);
@@ -90,8 +79,7 @@ namespace DGP.UnitySignals.Collections
 
         public override ObservableList<TValueType> GetValue() => this;
         public ObservableList<TValueType> Value => GetValue();
-
-        // IList<T> implementation - delegates to internal ObservableCollection
+        
         public TValueType this[int index]
         {
             get => _collection[index];
