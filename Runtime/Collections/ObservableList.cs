@@ -6,7 +6,7 @@ using System.Collections.Specialized;
 
 namespace DGP.UnitySignals.Collections
 {
-    public class ObservableList<TValueType> : SignalBase<ObservableList<TValueType>>, IList<TValueType>, INotifyCollectionChanged
+    public class ObservableList<TValueType> : SignalBase<ObservableList<TValueType>>, IList<TValueType>, INotifyCollectionChanged, IReadOnlyList<TValueType>
     {
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         public event Action<TValueType, int> ItemAdded;
