@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using DGP.UnitySignals.Collections;
@@ -163,7 +164,7 @@ namespace DGP.UnitySignals.Editor.Tests
             var list = new ObservableList<int>();
             var notificationCount = 0;
             
-            list.AddObserver((ObservableList<int> _) => notificationCount++);
+            list.AddObserver((IReadOnlyList<int> _) => notificationCount++);
             
             // Act
             list.Add(1);
@@ -346,7 +347,7 @@ namespace DGP.UnitySignals.Editor.Tests
             var list = new ObservableList<int>();
             var notificationCount = 0;
             
-            list.AddObserver((ObservableList<int> _) => notificationCount++);
+            list.AddObserver((IReadOnlyList<int> _) => notificationCount++);
             list.Add(1);
             
             Assert.AreEqual(1, notificationCount);

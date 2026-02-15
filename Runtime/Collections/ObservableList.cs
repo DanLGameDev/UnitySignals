@@ -6,12 +6,56 @@ using System.Collections.Specialized;
 
 namespace DGP.UnitySignals.Collections
 {
-    public class ObservableList<TValueType> : SignalBase<ObservableList<TValueType>>, IList<TValueType>, INotifyCollectionChanged, IReadOnlyList<TValueType>
+    /// <summary>
+    /// Observable collection that emits signals when items are added, removed, replaced, or cleared.
+    /// </summary>
+    /// <remarks>
+    /// This collection implements SignalBase with IReadOnlyList interface for API consistency and encapsulation.
+    /// 
+    /// IMPORTANT NOTIFICATION BEHAVIOR:
+    /// Since this is a mutable collection, the oldValue and newValue parameters in SignalValueChanged
+    /// will reference the same object (the current list state). For detailed change information,
+    /// subscribe to the collection-specific events: ItemAdded, ItemRemoved, ItemReplaced, or Cleared.
+    /// 
+    /// Usage patterns:
+    /// - For "react to any change": Use AddObserver with Action&lt;IReadOnlyList&lt;T&gt;&gt;
+    /// - For "track specific changes": Use ItemAdded, ItemRemoved, ItemReplaced, Cleared events
+    /// - For computed signals: Works seamlessly - will recalculate on any collection modification
+    /// </remarks>
+    /// <typeparam name="TValueType">The type of elements in the list</typeparam>
+    public class ObservableList<TValueType> : SignalBase<IReadOnlyList<TValueType>>, IList<TValueType>, INotifyCollectionChanged, IReadOnlyList<TValueType>
     {
+        /// <summary>
+        /// Raised when the collection changes in any way (add, remove, replace, clear).
+        /// Provides detailed NotifyCollectionChangedEventArgs for WPF/UI binding scenarios.
+        /// </summary>
         public event NotifyCollectionChangedEventHandler CollectionChanged;
+        
+        /// <summary>
+        /// Raised when an item is added to the collection.
+        /// </summary>
+        /// <param name="item">The item that was added</param>
+        /// <param name="index">The index where the item was inserted</param>
         public event Action<TValueType, int> ItemAdded;
+        
+        /// <summary>
+        /// Raised when an item is removed from the collection.
+        /// </summary>
+        /// <param name="item">The item that was removed</param>
+        /// <param name="index">The index where the item was located</param>
         public event Action<TValueType, int> ItemRemoved;
+        
+        /// <summary>
+        /// Raised when an item at a specific index is replaced with a different item.
+        /// </summary>
+        /// <param name="oldItem">The item that was replaced</param>
+        /// <param name="newItem">The new item at that index</param>
+        /// <param name="index">The index where the replacement occurred</param>
         public event Action<TValueType, TValueType, int> ItemReplaced;
+        
+        /// <summary>
+        /// Raised when the collection is cleared (all items removed).
+        /// </summary>
         public event Action Cleared;
         
         private readonly ObservableCollection<TValueType> _collection;
@@ -30,6 +74,10 @@ namespace DGP.UnitySignals.Collections
 
         private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            // Capture the current state as both old and new value
+            // (they're the same reference since we mutated in place)
+            var currentState = (IReadOnlyList<TValueType>)this;
+            
             // Handle add operations
             if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
             {
@@ -69,16 +117,29 @@ namespace DGP.UnitySignals.Collections
             
             // Handle reset (Clear)
             if (e.Action == NotifyCollectionChangedAction.Reset)
-            {
                 Cleared?.Invoke();
-            }
             
+            // Notify standard collection changed subscribers
             CollectionChanged?.Invoke(this, e);
-            NotifyObservers(this, this);
+            
+            // Notify signal observers
+            // Note: Both parameters are the same reference (current state after mutation)
+            NotifyObservers(currentState, currentState);
         }
 
-        public override ObservableList<TValueType> GetValue() => this;
-        public ObservableList<TValueType> Value => GetValue();
+        /// <summary>
+        /// Gets the current collection as an IReadOnlyList interface.
+        /// This is the signal's value and provides read-only access to the collection.
+        /// </summary>
+        public override IReadOnlyList<TValueType> GetValue() => this;
+
+        /// <summary>
+        /// Convenience property for accessing the collection as a read-only list.
+        /// Equivalent to calling GetValue().
+        /// </summary>
+        public IReadOnlyList<TValueType> Value => GetValue();
+        
+        // IList<T> and IReadOnlyList<T> implementation
         
         public TValueType this[int index]
         {
@@ -104,9 +165,7 @@ namespace DGP.UnitySignals.Collections
         protected override void Dispose(bool disposing)
         {
             if (disposing && _collection != null)
-            {
                 _collection.CollectionChanged -= OnCollectionChanged;
-            }
 
             base.Dispose(disposing);
         }
