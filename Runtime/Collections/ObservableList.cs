@@ -151,6 +151,19 @@ namespace DGP.UnitySignals.Collections
         public bool IsReadOnly => false;
 
         public void Add(TValueType item) => _collection.Add(item);
+        public void AddRange(IEnumerable<TValueType> items)
+        {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+    
+            foreach (var item in items)
+                _collection.Add(item);
+        }
+        public void ReplaceAll(IEnumerable<TValueType> newItems)
+        {
+            Clear();
+            AddRange(newItems);
+        }
         public void Clear() => _collection.Clear();
         public bool Contains(TValueType item) => _collection.Contains(item);
         public void CopyTo(TValueType[] array, int arrayIndex) => _collection.CopyTo(array, arrayIndex);

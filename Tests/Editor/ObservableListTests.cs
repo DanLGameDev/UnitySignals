@@ -164,7 +164,7 @@ namespace DGP.UnitySignals.Editor.Tests
             var list = new ObservableList<int>();
             var notificationCount = 0;
             
-            list.AddObserver((IReadOnlyList<int> _) => notificationCount++);
+            list.AddObserver((System.Collections.Generic.IReadOnlyList<int> _) => notificationCount++);
             
             // Act
             list.Add(1);
@@ -347,7 +347,7 @@ namespace DGP.UnitySignals.Editor.Tests
             var list = new ObservableList<int>();
             var notificationCount = 0;
             
-            list.AddObserver((IReadOnlyList<int> _) => notificationCount++);
+            list.AddObserver((System.Collections.Generic.IReadOnlyList<int> _) => notificationCount++);
             list.Add(1);
             
             Assert.AreEqual(1, notificationCount);
@@ -428,6 +428,139 @@ namespace DGP.UnitySignals.Editor.Tests
             Assert.AreEqual(1, itemReplacedFired, "ItemReplaced should fire for indexer set");
             Assert.AreEqual(1, clearedFired, "Cleared should fire for Clear operation");
             Assert.AreEqual(5, collectionChangedFired, "CollectionChanged should fire for all operations");
+        }
+
+        [Test]
+        public void TestObservableList_AddRange()
+        {
+            // Arrange
+            var list = new ObservableList<int>();
+            var itemsAdded = 0;
+            
+            list.ItemAdded += (item, index) => itemsAdded++;
+            
+            // Act
+            list.AddRange(new[] { 1, 2, 3, 4, 5 });
+            
+            // Assert
+            Assert.AreEqual(5, list.Count);
+            Assert.AreEqual(5, itemsAdded, "Should fire ItemAdded for each item");
+            Assert.AreEqual(1, list[0]);
+            Assert.AreEqual(5, list[4]);
+        }
+
+        [Test]
+        public void TestObservableList_AddRange_ToExistingItems()
+        {
+            // Arrange
+            var list = new ObservableList<string>();
+            list.Add("existing");
+            
+            var addedItems = new List<(string item, int index)>();
+            list.ItemAdded += (item, index) => addedItems.Add((item, index));
+            
+            // Act
+            list.AddRange(new[] { "new1", "new2", "new3" });
+            
+            // Assert
+            Assert.AreEqual(4, list.Count);
+            Assert.AreEqual(("new1", 1), addedItems[0]);
+            Assert.AreEqual(("new2", 2), addedItems[1]);
+            Assert.AreEqual(("new3", 3), addedItems[2]);
+        }
+
+        [Test]
+        public void TestObservableList_AddRange_EmptyCollection()
+        {
+            // Arrange
+            var list = new ObservableList<int>();
+            var itemsAdded = 0;
+            
+            list.ItemAdded += (item, index) => itemsAdded++;
+            
+            // Act
+            list.AddRange(new int[] { });
+            
+            // Assert
+            Assert.AreEqual(0, list.Count);
+            Assert.AreEqual(0, itemsAdded, "Should not fire events for empty collection");
+        }
+
+        [Test]
+        public void TestObservableList_ReplaceAll()
+        {
+            // Arrange
+            var list = new ObservableList<string>();
+            list.Add("old1");
+            list.Add("old2");
+            list.Add("old3");
+            
+            var clearedCount = 0;
+            var addedCount = 0;
+            
+            list.Cleared += () => clearedCount++;
+            list.ItemAdded += (item, index) => addedCount++;
+            
+            // Act
+            list.ReplaceAll(new[] { "new1", "new2" });
+            
+            // Assert
+            Assert.AreEqual(2, list.Count);
+            Assert.AreEqual(1, clearedCount, "Should fire Cleared once");
+            Assert.AreEqual(2, addedCount, "Should fire ItemAdded for each new item");
+            Assert.AreEqual("new1", list[0]);
+            Assert.AreEqual("new2", list[1]);
+        }
+
+        [Test]
+        public void TestObservableList_ReplaceAll_WithEmptyList()
+        {
+            // Arrange
+            var list = new ObservableList<int>();
+            list.Add(1);
+            list.Add(2);
+            
+            // Act
+            list.ReplaceAll(new int[] { });
+            
+            // Assert
+            Assert.AreEqual(0, list.Count, "List should be empty after replacing with empty collection");
+        }
+
+        [Test]
+        public void TestObservableList_ReplaceAll_SignalObservers()
+        {
+            // Arrange
+            var list = new ObservableList<int>();
+            list.Add(1);
+            list.Add(2);
+            
+            var notificationCount = 0;
+            list.AddObserver((IReadOnlyList<int> value) => notificationCount++);
+            
+            // Act
+            list.ReplaceAll(new[] { 10, 20, 30 });
+            
+            // Assert - Clear fires 1 notification, then Add fires 3 more
+            Assert.AreEqual(4, notificationCount, "Should notify for clear + each add");
+            Assert.AreEqual(3, list.Count);
+        }
+
+        [Test]
+        public void TestObservableList_ReplaceAll_ComputedSignal()
+        {
+            // Arrange
+            var list = new ObservableList<int>();
+            list.AddRange(new[] { 1, 2, 3 });
+            
+            var sumSignal = new ComputedSignal<int>(() => list.Value.Sum());
+            Assert.AreEqual(6, sumSignal.Value);
+            
+            // Act
+            list.ReplaceAll(new[] { 10, 20 });
+            
+            // Assert
+            Assert.AreEqual(30, sumSignal.Value, "Computed signal should recalculate after ReplaceAll");
         }
     }
 }
