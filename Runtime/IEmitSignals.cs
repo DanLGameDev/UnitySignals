@@ -34,7 +34,8 @@ namespace DGP.UnitySignals
         public void RemoveObserver(Action<TValueType> observer);
         
         public void ClearObservers();
-        
+
+        public TValueType Value { get; }
         public TValueType GetValue();
     }
 }

@@ -52,6 +52,7 @@ namespace DGP.UnitySignals
         public void RemoveObserver(Action<TValueType> observer) => _observerManager.RemoveObserver(observer);
 
         public abstract TValueType GetValue();
+        public virtual TValueType Value => GetValue();
         
         protected void MarkAsDead()
         {
