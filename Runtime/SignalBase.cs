@@ -21,13 +21,34 @@ namespace DGP.UnitySignals
         public void RemoveObserver(IEmitSignals.SignalChangedDelegate observer) => _observerManager.RemoveObserver(observer);
 
         // IEmitSignals<TValueType> implementation
-        public void AddObserver(ISignalObserver<TValueType> observer) => _observerManager.AddObserver(observer);
+        public void AddObserver(ISignalObserver<TValueType> observer, bool triggerImmediately = false)
+        {
+            _observerManager.AddObserver(observer);
+            
+            if (triggerImmediately)
+                observer.SignalValueChanged(this, GetValue(), GetValue());
+        }
+
         public void RemoveObserver(ISignalObserver<TValueType> observer) => _observerManager.RemoveObserver(observer);
 
-        public void AddObserver(IEmitSignals<TValueType>.SignalChangedHandler observer) => _observerManager.AddObserver(observer);
+        public void AddObserver(IEmitSignals<TValueType>.SignalChangedHandler observer, bool triggerImmediately = false)
+        {
+            _observerManager.AddObserver(observer);
+            
+            if (triggerImmediately)
+                observer(this, GetValue(), GetValue());
+        }
+
         public void RemoveObserver(IEmitSignals<TValueType>.SignalChangedHandler observer) => _observerManager.RemoveObserver(observer);
 
-        public void AddObserver(Action<TValueType> observer) => _observerManager.AddObserver(observer);
+        public void AddObserver(Action<TValueType> observer, bool triggerImmediately = false)
+        {
+            _observerManager.AddObserver(observer);
+            
+            if (triggerImmediately)
+                observer(GetValue());
+        }
+
         public void RemoveObserver(Action<TValueType> observer) => _observerManager.RemoveObserver(observer);
 
         public abstract TValueType GetValue();

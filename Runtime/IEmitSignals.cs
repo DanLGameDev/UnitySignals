@@ -24,13 +24,13 @@ namespace DGP.UnitySignals
         public delegate void SignalChangedHandler(IEmitSignals<TValueType> sender, TValueType oldValue, TValueType newValue);
         public event SignalChangedHandler SignalValueChanged;
 
-        public void AddObserver(ISignalObserver<TValueType> observer);
+        public void AddObserver(ISignalObserver<TValueType> observer, bool triggerImmediately = false);
         public void RemoveObserver(ISignalObserver<TValueType> observer);
         
-        public void AddObserver(SignalChangedHandler observer);
+        public void AddObserver(SignalChangedHandler observer, bool triggerImmediately = false);
         public void RemoveObserver(SignalChangedHandler observer);
         
-        public void AddObserver(Action<TValueType> observer);
+        public void AddObserver(Action<TValueType> observer, bool triggerImmediately = false);
         public void RemoveObserver(Action<TValueType> observer);
         
         public void ClearObservers();
