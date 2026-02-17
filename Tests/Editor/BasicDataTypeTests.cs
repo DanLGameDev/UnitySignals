@@ -151,6 +151,61 @@ namespace DGP.UnitySignals.Editor.Tests
         }
         
         [Test]
+        public void TestStringValueSignal_SetToNull_NotifiesObserverAndReturnsNull()
+        {
+            int invokeCount = 0;
+            string capturedOldValue = "sentinel";
+            string capturedNewValue = "sentinel";
+
+            StringValueSignal signal = new StringValueSignal("hello");
+
+            signal.AddObserver((sender, oldValue, newValue) =>
+            {
+                invokeCount++;
+                capturedOldValue = oldValue;
+                capturedNewValue = newValue;
+            });
+
+            // Setting to null should not throw, should notify, and should store null
+            Assert.DoesNotThrow(() => signal.SetValue(null));
+            Assert.IsNull(signal.GetValue());
+            Assert.AreEqual(1, invokeCount);
+            Assert.AreEqual("hello", capturedOldValue);
+            Assert.IsNull(capturedNewValue);
+        }
+
+        [Test]
+        public void TestStringValueSignal_SetNullTwice_DoesNotNotifySecondTime()
+        {
+            int invokeCount = 0;
+
+            StringValueSignal signal = new StringValueSignal("hello");
+            signal.SetValue(null); // move to null without observer
+
+            signal.AddObserver((sender, oldValue, newValue) => invokeCount++);
+
+            // Setting null again should be treated as no change
+            signal.SetValue(null);
+            Assert.AreEqual(0, invokeCount);
+        }
+
+        [Test]
+        public void TestStringValueSignal_FromNullToValue_NotifiesObserver()
+        {
+            int invokeCount = 0;
+
+            // Initialize via SetValue so we start from null
+            StringValueSignal signal = new StringValueSignal();
+            signal.SetValue(null);
+
+            signal.AddObserver((sender, oldValue, newValue) => invokeCount++);
+
+            signal.SetValue("back again");
+            Assert.AreEqual("back again", signal.GetValue());
+            Assert.AreEqual(1, invokeCount);
+        }
+        
+        [Test]
         public void TestVector2ValueSignal()
         {
             int invokeCount = 0;
