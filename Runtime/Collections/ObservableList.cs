@@ -10,17 +10,9 @@ namespace DGP.UnitySignals.Collections
     /// Observable collection that emits signals when items are added, removed, replaced, or cleared.
     /// </summary>
     /// <remarks>
-    /// This collection implements SignalBase with IReadOnlyList interface for API consistency and encapsulation.
-    /// 
-    /// IMPORTANT NOTIFICATION BEHAVIOR:
     /// Since this is a mutable collection, the oldValue and newValue parameters in SignalValueChanged
     /// will reference the same object (the current list state). For detailed change information,
     /// subscribe to the collection-specific events: ItemAdded, ItemRemoved, ItemReplaced, or Cleared.
-    /// 
-    /// Usage patterns:
-    /// - For "react to any change": Use AddObserver with Action&lt;IReadOnlyList&lt;T&gt;&gt;
-    /// - For "track specific changes": Use ItemAdded, ItemRemoved, ItemReplaced, Cleared events
-    /// - For computed signals: Works seamlessly - will recalculate on any collection modification
     /// </remarks>
     /// <typeparam name="TValueType">The type of elements in the list</typeparam>
     public class ObservableList<TValueType> : SignalBase<IReadOnlyList<TValueType>>, IList<TValueType>, INotifyCollectionChanged, IReadOnlyList<TValueType>
