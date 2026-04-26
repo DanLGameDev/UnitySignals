@@ -1,0 +1,18 @@
+{
+    "name": "DGP.UnitySignals.Editor",
+    "rootNamespace": "DGP.UnitySignals.Editor",
+    "references": [
+        "GUID:4a82634cf4de9694586fc6f670c73a25"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
